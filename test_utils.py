@@ -73,3 +73,12 @@ def test_ngrams_padding():
             ('h', 'e', 'l'), ('e', 'l', 'l'), ('l', 'l', 'o'),
             ('l', 'o', utils.END), ('o', utils.END, utils.END)] == \
         utils.ngrams(text, 3, padding_left=True, padding_right=True)
+
+def test_word_based_ngrams():
+    text = 'Hello this is a sentence'
+    assert [('Hello',), ('this',), ('is',), ('a',), ('sentence',)] == \
+        utils.word_based_ngrams(text, 1)
+    assert [('Hello', 'this'), ('this', 'is'), ('is', 'a'),
+            ('a', 'sentence')] == \
+        utils.word_based_ngrams(text, 2)
+

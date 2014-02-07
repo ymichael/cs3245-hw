@@ -32,13 +32,19 @@ def ngrams(text, n=1, padding_left=False, padding_right=False):
         text = list(text) + right_padding
 
     stop_index = len(text) - n
-    for index, char in enumerate(text):
+    for index, gram in enumerate(text):
         if index > stop_index:
             break
 
         result.append(tuple(text[index:index + n]))
 
     return result
+
+def word_based_ngrams(text, n=1, padding_left=False, padding_right=False):
+    text = text.split(' ')
+    return ngrams(text, n=n,
+                  padding_left=padding_left,
+                  padding_right=padding_right)
 
 
 
