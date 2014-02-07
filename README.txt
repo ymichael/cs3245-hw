@@ -7,9 +7,25 @@ This is the README file for A0082877M's submission
 
 == Files included with this submission ==
 
-List the files in your submission here and provide a short 1 line
-description of each file.  Make sure your submission's files are named
-and formatted correctly.
+ESSAY.txt - contains answers to the essay questions.
+
+README.txt - this file.
+
+build_test_LM.py - Generates prediction using code in model.py and utils.py
+
+eval.py - Unchanged. Used to evaluate predictions.
+
+model.py - Basic Model class. Simple class to encapsulate functionality of a
+    generic language model. Allows user to register grams, increment gram counts
+    and query for probabilities.
+
+utils.py - Contains utility functions (parsing labelled data, splitting text
+    into ngrams etc.)
+
+test_model.py - nose tests for model.py.
+
+test_utils.py - nose tests for utils.py.
+
 
 == Statement of individual work ==
 
@@ -23,5 +39,9 @@ printed) from the discussions.
 
 == References ==
 
-<Please list any websites and/or people you consulted with for this
-assignment and state their role>
+Talked to the following people briefly about the assignment:
+- Jerome, Benedict, Camillus, Yujian
+
+- Generic resources from StackOverflow for some programming/python related
+  questions. (eg. how to prepend to a list in python, how to run nose tests
+  etc.)
