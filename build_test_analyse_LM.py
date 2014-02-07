@@ -7,17 +7,22 @@ import model
 
 flags = {
     'verbose': None,
-    'tokenizer': None
+    'tokenizer': None,
+    'n': 4,
+    'padding': None,
+    'tokenizer': None,
 }
 
 def get_tokenizer():
+    n = int(flags['n'])
+    padding = flags['padding']
     def character_based_4gram(text):
-        return utils.ngrams(text, 4, padding_left=True, padding_right=True)
+        return utils.ngrams(text, n, padding_left=padding, padding_right=padding)
 
     if flags['tokenizer'] == 'word':
         def word_based_4gram(text):
             return utils.word_based_ngrams(
-                text, 1, padding_left=True, padding_right=True)
+                text, n, padding_left=padding, padding_right=padding)
 
         return word_based_4gram
 
@@ -63,6 +68,10 @@ def test_LM(in_file, out_file, LM):
     print "Testing language models..."
     tokenizer = get_tokenizer()
     output = open(out_file, 'w')
+
+    if flags['verbose']:
+        all_deltas = []
+
     with open(in_file) as in_file_contents:
         for line in in_file_contents:
             grams = tokenizer(line)
@@ -96,10 +105,15 @@ def test_LM(in_file, out_file, LM):
                             continue
 
                         deltas.append((max_prob - v) / float(abs(max_prob)))
-                    print sum(deltas) / float(len(deltas))
+                    avg_delta = sum(deltas) / float(len(deltas))
+                    all_deltas.append(avg_delta)
 
 
             output.write('%s %s' % (predicted_language, line))
+
+    if flags['verbose']:
+        print 'Average delta: %s' % (sum(all_deltas) / float(len(all_deltas)))
+
 
 
 def usage():
@@ -131,6 +145,12 @@ def main():
 
     if '-p' in sys.argv:
         flags['tokenizer'] = sys.argv[sys.argv.index('-p') + 1]
+
+    if '-n' in sys.argv:
+        flags['n'] = sys.argv[sys.argv.index('-n') + 1]
+
+    if '-padding' in sys.argv:
+        flags['padding'] = True
 
     LM = build_LM(input_file_b)
     test_LM(input_file_t, output_file, LM)

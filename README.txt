@@ -26,6 +26,25 @@ test_model.py - nose tests for model.py.
 
 test_utils.py - nose tests for utils.py.
 
+build_test_analyse_LM.py - Clone of build_test_LM.py with more functionality.
+	This file is used for experimenting with various different parameters for
+	answering the essay questions.
+
+	This file is similar to build_test_LM.py with the exception of:
+		- '-v' flag for verbose mode. (In verbose mode, the file outputs the
+			probability of all three language models and their variance
+			compared to the model with the highest probability. This is
+			used as a rough metric for determining if a particular parameter
+			is 'better')
+
+		- '-p' flag for specifying the parser/tokenizer to use. By default,
+			if this flag is not set, the script uses a 4 gram character based
+			parser.
+
+		- '-n' flag for specifying the value of n in n-gram
+
+		- '-padding' flag for toggling padding to true.
+
 
 == Statement of individual work ==
 
