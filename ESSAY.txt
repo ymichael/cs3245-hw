@@ -2,10 +2,27 @@
 
 1. In the homework assignment, we are using character-based ngrams, i.e., the gram units are characters. Do you expect token-based ngram models to perform better?
 
+Expect token based to do better than character based ngram models. This is based on the intuition that token-based models gives us a better distinction between the languages.
+
+===
 
 2. What do you think will happen if we provided more data for each category for you to build the language models? What if we only provided more data for Indonesian?
 
+If we were given more training data, We would be able to predict the language of a given piece of unlabelled input with higher confidence/accuracy.
+
+If we were only given more data for Indonesian, I suspect that we will do better overall as well, though not as well if we got less data but more evenly spread out.
+
+===
+
 3. What do you think will happen if you strip out punctuations and/or numbers? What about converting upper case characters to lower case?
 
+I think that this might give us more accuracy for certain languages. This also depends on whether we are using a character based ngram model or a token based on.
+
+I'd expect this change to work better for a token based ngram model.
+
+===
 
 4. We use 4-gram models in this homework assignment. What do you think will happen if we varied the ngram size, such as using unigrams, bigrams and trigrams?
+
+I think that, especially for our character based ngram model, using larger n helps to improve accuracy. (up to a reasonable length).
+
