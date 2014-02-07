@@ -2,8 +2,45 @@ This is the README file for A0082877M's submission
 
 == General Notes about this assignment ==
 
-- Choice to use padding as shown in slide 13 of lecture 1
+# Choice to use padding as shown in slide 13 of lecture 1
+I decided to use padding for this assignment.
 
+I tried both approaches and padding helped me reduce the
+threshold for which the propotion of invalid grams were allowed.
+
+# General comments
+I adopted a rather straightforward approach for this assignment.
+
+    1. Read in input file.
+    2. Process string using methods in utils.py
+    3. Create language model (using a class in model.py)
+    4. Use the language model to calculate probabilities (also in model.py)
+    5. Write result to prediction file.
+
+*When calculating probabilities, the values tended to become so small they
+became zero. My solution to this was to use the logarithm of these probabilities
+and take their sum instead. This was done as a flag so users have the option to
+use actual probabilities if they please.
+
+*The number of invalid grams (grams that do not match anything in the
+vocabulary) is used as a signal to whether we should even return a probability.
+A hard coded THRESHOLD value, derived from trial and error, is used to determine
+the allowed proportion of invalid grams. (This is used for distinguishing other
+languages that are not in our model).
+
+Finally, most of the code in this assignment, in particular, those in
+build_test_LM.py are tested by running the following command:
+
+    python build_test_LM.py -b input.train.txt -t input.test.txt \
+        -o input.predict.txt && python eval.py txt
+
+For the files `model.py` and `utils.py`, I've elected to use nose tests to test
+their functionality. (nose tests are a simple extension of python's unittest and
+can be installed with `pip install nosetest`):
+
+    https://nose.readthedocs.org/en/latest/
+
+To run the tests, simply run `nosetest` in this folder.
 
 == Files included with this submission ==
 
