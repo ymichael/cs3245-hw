@@ -1,8 +1,8 @@
 #!/usr/bin/python
 import math
 
-# Arbitrary threshold. (TODO)
-THRESHOLD = 0.50
+# NOTE(michael): Arbitrary threshold, from trial and error.
+THRESHOLD = 0.40
 
 class Model(object):
     def __init__(self, smoothing=1):

@@ -20,7 +20,9 @@ def build_LM(in_file):
             language_models.setdefault(lang, model.Model())
 
             language_model = language_models[lang]
-            for gram in utils.ngrams(text, 4):
+            for gram in utils.ngrams(text, 4,
+                                     padding_left=True,
+                                     padding_right=True):
                 all_grams.add(gram)
 
                 language_model.register_gram(gram)
@@ -44,7 +46,7 @@ def test_LM(in_file, out_file, LM):
     output = open(out_file, 'w')
     with open(in_file) as in_file_contents:
         for line in in_file_contents:
-            grams = utils.ngrams(line, 4)
+            grams = utils.ngrams(line, 4, padding_left=True, padding_right=True)
 
             predicted_language = 'other'
             max_prob = None
