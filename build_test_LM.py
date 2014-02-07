@@ -5,12 +5,19 @@ import getopt
 import utils
 import model
 
+def get_tokenizer():
+    def character_based_4gram(text):
+        return utils.ngrams(text, 4, padding_left=True, padding_right=True)
+
+    return character_based_4gram
+
 def build_LM(in_file):
     """
     build language models for each label
     each line in in_file contains a label and an URL separated by a tab(\t)
     """
     print 'Building language models...'
+    tokenizer = get_tokenizer()
     language_models = {}
     all_grams = set()
 
@@ -20,12 +27,9 @@ def build_LM(in_file):
             language_models.setdefault(lang, model.Model())
 
             language_model = language_models[lang]
-            for gram in utils.ngrams(text, 4,
-                                     padding_left=True,
-                                     padding_right=True):
+            for gram in tokenizer(text):
                 all_grams.add(gram)
 
-                language_model.register_gram(gram)
                 language_model.incr_gram_count(gram)
 
     for lang in language_models:
@@ -43,10 +47,11 @@ def test_LM(in_file, out_file, LM):
     you should print the most probable label for each URL into out_file
     """
     print "Testing language models..."
+    tokenizer = get_tokenizer()
     output = open(out_file, 'w')
     with open(in_file) as in_file_contents:
         for line in in_file_contents:
-            grams = utils.ngrams(line, 4, padding_left=True, padding_right=True)
+            grams = tokenizer(line)
 
             predicted_language = 'other'
             max_prob = None
@@ -70,7 +75,7 @@ def test_LM(in_file, out_file, LM):
 def usage():
     print "usage: " + sys.argv[0] + \
         " -b input-file-for-building-LM" + \
-        "-t input-file-for-testing-LM" + \
+        " -t input-file-for-testing-LM" + \
         " -o output-file"
 
 def main():
