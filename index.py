@@ -31,7 +31,8 @@ def main():
         usage()
         sys.exit(2)
 
-    print directory_of_documents, dictionary_file, postings_file
+    import build_index
+    build_index.build(directory_of_documents, dictionary_file, postings_file)
 
 if __name__ == '__main__':
     main()
