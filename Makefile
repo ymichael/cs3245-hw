@@ -4,3 +4,6 @@ index:
 
 tests:
 	nosetests
+
+rmpyc:
+	rm *.pyc
