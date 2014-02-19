@@ -30,6 +30,23 @@ def test_postings_list_sorted():
     assert pl.freq() == 3
 
 
+def test_postings_list_str():
+    pl = PostingsList()
+    assert str(pl) == ''
+
+    pl.add_doc(1)
+    assert str(pl) == '1'
+
+    pl.add_doc(2)
+    assert str(pl) == '1 2'
+
+    pl.add_doc(5)
+    assert str(pl) == '1 2 5'
+
+    pl.add_doc(3)
+    assert str(pl) == '1 2 3 5'
+
+
 def test_inverted_index_add_term():
     ii = InvertedIndex()
     assert ii.freq('asdf') == 0
@@ -55,3 +72,14 @@ def test_inverted_index_add_document():
     assert ii.freq('asdf') == 2
     assert ii.freq('qwer') == 1
     assert ii.freq('zxcv') == 1
+
+
+def test_inverted_index_terms():
+    ii = InvertedIndex()
+    assert ii.terms() == []
+
+    ii.add_document(1, ['asdf', 'qwer'])
+    assert ii.terms() == ['asdf', 'qwer']
+
+    ii.add_document(2, ['asdf', 'zxcv', 'asdf'])
+    assert ii.terms() == ['asdf', 'qwer', 'zxcv']

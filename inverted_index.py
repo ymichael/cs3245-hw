@@ -26,20 +26,29 @@ class PostingsList(object):
     def freq(self):
         return len(self._docs)
 
+    def __str__(self):
+        return ' '.join([str(elem) for elem in self._docs])
+
 
 class InvertedIndex(object):
     def __init__(self):
-        self.postings_list = collections.defaultdict(PostingsList)
+        self._postings_list = collections.defaultdict(PostingsList)
 
     def add_document(self, doc_id, terms):
         for term in terms:
             self.add_term(term, doc_id)
 
     def add_term(self, term, doc_id):
-        self.postings_list[term].add_doc(doc_id)
+        self._postings_list[term].add_doc(doc_id)
 
     def freq(self, term):
-        return self.postings_list[term].freq()
+        return self._postings_list[term].freq()
 
     def postings_list(self, term):
-        return self.postings_list[term]
+        return self._postings_list[term]
+
+    def terms(self, sort=True):
+        terms = self._postings_list.keys()
+        if sort:
+            terms.sort()
+        return terms

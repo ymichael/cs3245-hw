@@ -25,6 +25,23 @@ def build(training_dir, dict_file, postings_file):
         inverted_index.add_document(doc_id, terms)
 
 
+    dictionary_file = open(dict_file, 'w')
+    postings_file = open(postings_file, 'w')
+
+    line = 1
+    for term in inverted_index.terms():
+        pl = inverted_index.postings_list(term)
+        freq = inverted_index.freq(term)
+
+        dictionary_file.write('%d %s %s\n' % (line, term, freq))
+        postings_file.write('%s %s\n' % (term, pl))
+
+        line += 1
+
+    dictionary_file.close()
+    postings_file.close()
+
+
 def process_file(filepath):
     """Reads file and returns a list of terms."""
     terms = []
