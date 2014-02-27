@@ -32,19 +32,19 @@ def test_postings_list_sorted():
 
 def test_postings_list_str():
     pl = PostingsList()
-    assert str(pl) == ''
+    assert pl.to_string() == ''
 
     pl.add_doc(1)
-    assert str(pl) == '1'
+    assert pl.to_string() == '1'
 
     pl.add_doc(2)
-    assert str(pl) == '1 2'
+    assert pl.to_string() == '1 2'
 
     pl.add_doc(5)
-    assert str(pl) == '1 2 5'
+    assert pl.to_string() == '1 2 5'
 
     pl.add_doc(3)
-    assert str(pl) == '1 2 3 5'
+    assert pl.to_string() == '1 2 3 5'
 
 
 def test_inverted_index_add_term():

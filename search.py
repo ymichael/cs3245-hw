@@ -28,7 +28,7 @@ def main():
     output_file = get_flag_value('-o')
 
     if dictionary_file == None or \
-            postings_file == None \
+            postings_file == None or \
             queries_file == None or \
             output_file == None:
         usage()

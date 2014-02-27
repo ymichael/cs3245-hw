@@ -26,8 +26,12 @@ class PostingsList(object):
     def freq(self):
         return len(self._docs)
 
-    def __str__(self):
+    def to_string(self):
         return ' '.join([str(elem) for elem in self._docs])
+
+    @staticmethod
+    def from_string(string):
+        return string.split(' ')
 
 
 class InvertedIndex(object):
@@ -52,3 +56,10 @@ class InvertedIndex(object):
         if sort:
             terms.sort()
         return terms
+
+    def to_string(self, term):
+        return '%s %s' % (term, self.freq(term))
+
+    @staticmethod
+    def from_string(string):
+        return string.split(' ')

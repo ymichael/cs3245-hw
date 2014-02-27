@@ -14,7 +14,7 @@ def build(training_dir, dict_file, postings_file):
 
     # Two loops here to have control over the size of the loop.
     # NOTE(michael): for testing.
-    filepaths = filepaths[:10]
+    # filepaths = filepaths[:10]
     for filepath in filepaths:
         terms = process_file(filepath)
         doc_id = os.path.basename(filepath)
@@ -28,15 +28,15 @@ def build(training_dir, dict_file, postings_file):
     dictionary_file = open(dict_file, 'w')
     postings_file = open(postings_file, 'w')
 
-    line = 1
     for term in inverted_index.terms():
         pl = inverted_index.postings_list(term)
         freq = inverted_index.freq(term)
 
-        dictionary_file.write('%d %s %s\n' % (line, term, freq))
-        postings_file.write('%s %s\n' % (term, pl))
+        dictionary_file.write(inverted_index.to_string(term))
+        dictionary_file.write('\n')
 
-        line += 1
+        postings_file.write('%s %s' % (term, pl.to_string()))
+        postings_file.write('\n')
 
     dictionary_file.close()
     postings_file.close()
