@@ -25,6 +25,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     processed.append(token)
 
                 query = parse_query.process_infix_query(processed)
+                print execute_query(query, dictionary, pfile)
 
 
 def execute_query(query, dictionary, pfile):
@@ -38,45 +39,106 @@ def execute_query(query, dictionary, pfile):
 
     if operator == 'NOT':
         # TODO(michael)
-        pass
+        return []
 
     # Total 3 cases:
     # - Both linked lists (have not read posting into memory.)
     # - Both arrays (already have postings/results in memory.)
     # - 1 linked list, 1 array
-    first_operand = operands[0]
-    first_operand_is_query = instanceof(first_operand, parse_query.Query)
-    if first_operand_is_query:
-        first_operand_results = execute_query(first_operand, dictionary, pfile)
+    operand1 = operands[0]
+    operand1_is_query = isinstance(operand1, parse_query.Query)
+    if operand1_is_query:
+        operand1_results = execute_query(operand1, dictionary, pfile)
     else:
-        first_operand_results = \
-            pfile.get_entry(dictionary.get_head(first_operand))
+        operand1_results = \
+            pfile.get_entry(dictionary.get_head(operand1))
 
-    second_operand = operands[1]
-    second_operand_is_query = instanceof(operands[1], parse_query.Query)
-    if second_operand_is_query:
-        second_operand_results = \
-            execute_query(second_operand, dictionary, pfile)
+    operand2 = operands[1]
+    operand2_is_query = isinstance(operands[1], parse_query.Query)
+    if operand2_is_query:
+        operand2_results = \
+            execute_query(operand2, dictionary, pfile)
     else:
-        second_operand_results = \
-            pfile.get_entry(dictionary.get_head(second_operand))
+        operand2_results = \
+            pfile.get_entry(dictionary.get_head(operand2))
 
     # Case 1: Both are linked lists
-    if not first_operand_is_query and not second_operand_is_query:
+    if not operand1_is_query and not operand2_is_query:
         # TODO(michael): use skip lists etc.
+        ptr1 = operand1_results
+        ptr2 = operand1_results
+
+        if operator == 'AND':
+            results = []
+            while ptr1 and ptr2:
+                if ptr1.doc_id == ptr2.doc_id:
+                    results.append(ptr1.doc_id)
+                    ptr1 = pfile.get_entry(dictionary.get_head(ptr1.next_pointer))
+                    ptr2 = pfile.get_entry(dictionary.get_head(ptr2.next_pointer))
+                elif ptr1.doc_id < ptr2.doc_id:
+                    if ptr1.skip_pointer and ptr1.skip_doc_id <= ptr2.doc_id:
+                        ptr1 = pfile.get_entry(dictionary.get_head(ptr1.skip_pointer))
+                    else:
+                        ptr1 = pfile.get_entry(dictionary.get_head(ptr1.next_pointer))
+                else:
+                    if ptr2.skip_pointer and ptr2.skip_doc_id <= ptr1.doc_id:
+                        ptr2 = pfile.get_entry(dictionary.get_head(ptr2.skip_pointer))
+                    else:
+                        ptr2 = pfile.get_entry(dictionary.get_head(ptr2.next_pointer))
+            return results
+        else:
+            # OR operator
+            results = []
+            while ptr1 and ptr1.next_pointer:
+                while ptr2 and ptr2.doc_id < ptr1.doc_id:
+                    if results[-1] != ptr2.doc_id:
+                        results.append(ptr2.doc_id)
+                    ptr2 = pfile.get_entry(dictionary.get_head(ptr2.next_pointer))
+
+                results.append(ptr1.doc_id)
+                ptr1 = pfile.get_entry(dictionary.get_head(ptr1.next_pointer))
+            return results
 
 
     # Case 2: Both are arrays (Do simple python intersect/union.)
-    if first_operand_is_query and second_operand_is_query:
-        # TODO(michael)
+    if operand1_is_query and operand2_is_query:
+        if operator == 'AND':
+            results = []
+            index1 = 0
+            index2 = 0
+            while index1 < len(operand1_results) and \
+                    index2 < len(operand2_results):
+                if operand1_results[index1] == operand2_results[index2]:
+                    results.append(operand1_results[index1])
+                    index1 += 1
+                    index2 += 1
+                elif operand1_results[index1] < operand2_results[index2]:
+                    # TODO(michael): Use binary search here.
+                    index1 += 1
+                else:
+                    # TODO(michael): Use binary search here.
+                    index2 += 1
+            return results
+        else:
+            # OR operator
+            results = []
+            index2 = 0
+            for doc_id in operand1_results:
+                while index2 < len(operand2_results) and \
+                        operand2_results[index2] < doc_id:
+                    if results[-1] != operand2_results[index2]:
+                        results.append(operand2_results[index2])
+                    index2 += 1
+                results.append(doc_id)
+            return results
 
     # Case 3: One of each type.
-    if first_operand_is_query:
-        in_memory_results = first_operand_results
-        linked_list_results = second_operand_results
+    if operand1_is_query:
+        in_memory_results = operand1_results
+        linked_list_results = operand2_results
     else:
-        in_memory_results = second_operand_results
-        linked_list_results = first_operand_results
+        in_memory_results = operand2_results
+        linked_list_results = operand1_results
     # TODO(michael)
 
     return []

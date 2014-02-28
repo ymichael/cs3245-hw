@@ -14,13 +14,21 @@ class PostingsFile(object):
         return self.f.tell()
 
     def seek(self, byte_no):
+        if byte_no is None:
+            return
         self.f.seek(byte_no)
 
     def read_entry(self, byte_no):
+        if byte_no is None:
+            return None
+
         self.seek(byte_no)
         return self.f.read(PostingsFileEntry.SIZE)
 
     def get_entry(self, byte_no):
+        if byte_no is None:
+            return None
+
         entry = PostingsFileEntry.from_string(
             self.read_entry(byte_no))
         entry.set_own_pointer(byte_no)
