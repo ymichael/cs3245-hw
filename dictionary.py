@@ -23,6 +23,9 @@ class Dictionary(object):
     def get_tail(self, term):
         return self.terms[term].tail
 
+    def all_terms(self):
+        return self.terms.keys()
+
 
 class DocumentIdLinkedList(object):
     def __init__(self):

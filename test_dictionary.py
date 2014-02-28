@@ -46,3 +46,20 @@ def test_dictionary_add_term():
     assert_eq(2, d.get_frequency('asdf'))
     assert_eq(first_pointer, d.get_head('asdf'))
     assert_eq(next_pointer, d.get_tail('asdf'))
+
+
+def test_dictionary_all_terms():
+    d = Dictionary()
+    assert_eq([], d.all_terms())
+
+    d.add_term('asdf', 1, 1)
+    assert_eq(['asdf'], d.all_terms())
+
+    d.add_term('asdf', 2, 1)
+    assert_eq(['asdf'], d.all_terms())
+
+    d.add_term('qwer', 1, 1)
+    d.add_term('zxcv', 1, 1)
+    assert_eq(
+        sorted(['asdf', 'qwer', 'zxcv']),
+        sorted(d.all_terms()))

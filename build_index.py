@@ -41,6 +41,10 @@ def build(training_dir, dict_file, postings_file):
                     postings_file.write_entry(
                         doc_id, write_location=current_node_location)
 
+        # Skip pointers
+        for terms in dictionary.all_terms():
+            # TODO(michael)
+
 
 def process_file(filepath):
     """Reads file and returns a list of terms."""
