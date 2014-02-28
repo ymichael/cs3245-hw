@@ -15,17 +15,17 @@ def is_brace(token):
     return token in ['(', ')']
 
 
-def compare(op1, op2):
+def is_operand(token):
+    return not (is_operator(token) or is_brace(token))
+
+
+def compare_operators(op1, op2):
     if OPERATOR_PRECEDENCE[op1] == OPERATOR_PRECEDENCE[op2]:
         return 0
     elif OPERATOR_PRECEDENCE[op1] > OPERATOR_PRECEDENCE[op2]:
         return 1
     else:
         return -1
-
-
-def is_operand(token):
-    return not (is_operator(token) or is_brace(token))
 
 
 def infix_to_prefix(query):
@@ -44,7 +44,7 @@ def infix_to_prefix(query):
             stack.append(token)
         elif is_operator(token):
             while (len(stack) and not is_brace(stack[-1])):
-                if compare(token, stack[-1]) <= 0:
+                if compare_operators(token, stack[-1]) <= 0:
                     output.append(stack[-1])
                     stack = stack[:-1]
                 else:
@@ -95,8 +95,6 @@ def process_infix_query(infix_list):
 class Query(object):
     def __init__(self, query_tuple):
         self.query_tuple = query_tuple
-        self.operator = query_tuple[0]
-        self.operands = list(query_tuple)[1:]
 
     def __repr__(self):
         return 'Query(%s)' % str(self.query_tuple)
