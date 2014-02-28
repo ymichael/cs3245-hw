@@ -27,6 +27,9 @@ class PostingsFile(object):
         return entry
 
     def get_entry_list_from_pointer(self, head):
+        if head is None:
+            return []
+
         head_node = self.get_entry(head)
 
         current_node = head_node

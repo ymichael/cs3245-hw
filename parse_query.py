@@ -66,10 +66,9 @@ def infix_to_prefix(query):
 
 def process_infix_query(infix_list):
     stack = []
-    nested_queries = []
 
     if len(infix_list) == 1:
-        return infix_list
+        return Query(tuple(infix_list))
 
     while (len(infix_list) != 1 or len(stack)):
         token = infix_list[-1]
@@ -86,13 +85,13 @@ def process_infix_query(infix_list):
                 q = Query((token, stack[-1], stack[-2]))
                 stack = stack[:-2]
 
-            nested_queries.append(q)
             infix_list.append(q)
 
-    return nested_queries
+    return infix_list[0]
 
 
 class Query(object):
+    """Wraper object for queries."""
     def __init__(self, query_tuple):
         self.query_tuple = query_tuple
 

@@ -106,8 +106,12 @@ def process_tokens(tokens):
     terms = set()
     for sentence in tokens:
         for token in sentence:
-            token = stemmer.stem(token) # Stemming
-            token = token.lower() # Case-folding
-            terms.add(token)
+            terms.add(process_word(token))
 
     return list(terms)
+
+
+def process_word(token):
+    token = stemmer.stem(token) # Stemming
+    token = token.lower() # Case-folding
+    return token
