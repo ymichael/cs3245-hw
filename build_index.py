@@ -1,11 +1,11 @@
 import os
-from inverted_index import InvertedIndex
+from dictionary import Dictionary
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import PorterStemmer
 
 
 def build(training_dir, dict_file, postings_file):
-    inverted_index = InvertedIndex()
+    dictionary = Dictionary()
 
     # Read each file in the training dir.
     filepaths = []
@@ -15,31 +15,22 @@ def build(training_dir, dict_file, postings_file):
     # Two loops here to have control over the size of the loop.
     # NOTE(michael): for testing.
     # filepaths = filepaths[:10]
-    for filepath in filepaths:
-        terms = process_file(filepath)
-        doc_id = os.path.basename(filepath)
 
-        # TODO(michael): Making assumption that document is an int.
-        doc_id = int(doc_id)
+    with open(postings_file, 'w') as postings_file:
+        for filepath in filepaths:
+            terms = process_file(filepath)
+            # TODO(michael): Making assumption that document is an int.
+            doc_id = int(os.path.basename(filepath))
 
-        inverted_index.add_document(doc_id, terms)
+            # for term in terms:
+                # current_pointer = postings_file.tell()
+                # previous_pointer = dictionary.previous_entry(term)
+                # dictionary.set_next_pointer(current_pointer)
 
+                # d.add_term(term, doc_id)
 
-    dictionary_file = open(dict_file, 'w')
-    postings_file = open(postings_file, 'w')
-
-    for term in inverted_index.terms():
-        pl = inverted_index.postings_list(term)
-        freq = inverted_index.freq(term)
-
-        dictionary_file.write(inverted_index.to_string(term))
-        dictionary_file.write('\n')
-
-        postings_file.write('%s %s' % (term, pl.to_string()))
-        postings_file.write('\n')
-
-    dictionary_file.close()
-    postings_file.close()
+                # entry = '%8d %8d' % (postings_file.tell(), doc_id)
+                # print entry
 
 
 def process_file(filepath):
@@ -66,11 +57,11 @@ def process_tokens(tokens):
 
     Takes in an list of list.
     """
-    terms = []
+    terms = set()
     for sentence in tokens:
         for token in sentence:
             token = stemmer.stem(token) # Stemming
             token = token.lower() # Case-folding
-            terms.append(token)
+            terms.add(token)
 
-    return terms
+    return list(terms)
