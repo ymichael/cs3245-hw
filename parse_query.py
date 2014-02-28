@@ -68,6 +68,9 @@ def process_infix_query(infix_list):
     stack = []
     nested_queries = []
 
+    if len(infix_list) == 1:
+        return infix_list
+
     while (len(infix_list) != 1 or len(stack)):
         token = infix_list[-1]
         infix_list = infix_list[:-1]
@@ -86,12 +89,14 @@ def process_infix_query(infix_list):
             nested_queries.append(q)
             infix_list.append(q)
 
-    print nested_queries
+    return nested_queries
 
 
 class Query(object):
-    def __init__(self, query):
-        self.query = query
+    def __init__(self, query_tuple):
+        self.query_tuple = query_tuple
+        self.operator = query_tuple[0]
+        self.operands = list(query_tuple)[1:]
 
     def __repr__(self):
-        return 'Query(%s)' % str(self.query)
+        return 'Query(%s)' % str(self.query_tuple)
