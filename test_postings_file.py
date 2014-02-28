@@ -75,6 +75,43 @@ def test_postings_file_write_entry_overwrite():
     os.remove(filename)
 
 
+def test_postings_file_get_entry():
+    filename = 'test'
+    with PostingsFile(filename) as pfile:
+        head = pfile.pointer
+        pfile.write_entry(1)
+
+        # Test that we set the entries own pointer.
+        assert_eq(head, pfile.get_entry(head).own_pointer)
+
+        ptr = pfile.pointer
+        pfile.write_entry(2)
+        assert_eq(ptr, pfile.get_entry(ptr).own_pointer)
+
+    os.remove(filename)
+
+
+def test_postings_file_get_entry_from_pointer():
+    filename = 'test'
+    with PostingsFile(filename) as pfile:
+        head = pfile.pointer
+        prev_ptr = head
+        pfile.write_entry(1)
+
+        for i in xrange(10):
+            next_ptr = pfile.pointer
+            pfile.write_entry(i + 1, next_ptr, write_location=prev_ptr)
+            pfile.write_entry(i + 2, write_location=next_ptr)
+            prev_ptr = next_ptr
+
+        entries = pfile.get_entry_list_from_pointer(head)
+        entries = [entry.doc_id for entry in entries]
+        assert_eq([1,2,3,4,5,6,7,8,9,10,11], entries)
+
+    os.remove(filename)
+
+
+
 def test_postings_file_entry_to_string_only_doc_id():
     pfe = PostingsFileEntry(1)
     assert_eq(

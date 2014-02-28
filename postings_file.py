@@ -20,6 +20,26 @@ class PostingsFile(object):
         self.seek(byte_no)
         return self.f.read(PostingsFileEntry.SIZE)
 
+    def get_entry(self, byte_no):
+        entry = PostingsFileEntry.from_string(
+            self.read_entry(byte_no))
+        entry.set_own_pointer(byte_no)
+        return entry
+
+    def get_entry_list_from_pointer(self, head):
+        head_node = self.get_entry(head)
+
+        current_node = head_node
+        entries = [current_node]
+
+        # collect entries using pointers
+        while (current_node.next_pointer):
+            current_node = self.get_entry(
+                current_node.next_pointer)
+            entries.append(current_node)
+
+        return entries
+
     def write_entry(
             self,
             doc_id,
@@ -55,6 +75,13 @@ class PostingsFileEntry(object):
         self.next_pointer = next_pointer
         self.skip_pointer = skip_pointer
         self.skip_doc_id = skip_doc_id
+        self._own_pointer = None
+
+    def get_own_pointer(self):
+        return self._own_pointer
+
+    def set_own_pointer(self, own_pointer):
+        self.own_pointer = own_pointer
 
     def to_string(self):
         return self.FORMAT % (
@@ -62,6 +89,9 @@ class PostingsFileEntry(object):
             self.next_pointer,
             self.skip_pointer,
             self.skip_doc_id)
+
+    def __str__(self):
+        return 'Entry(%d)' % self.doc_id
 
     def __eq__(self, other):
         if not isinstance(other, PostingsFileEntry):
