@@ -1,13 +1,15 @@
-from inverted_index import InvertedIndex, Term
+import parse_query
+
 
 def search(dictionary_file, postings_file, queries_file, output_file):
     # Build in memory dict from dictionary_file.
-    with open(dictionary_file) as f:
-        line_no = 1
-        for line in f:
-            line = line.rstrip('\n')
-            term, freq = InvertedIndex.from_string(line)
-
-            line_no += 1
+    # TODO(michael)
 
     # Process queries.
+    with open(queries_file) as qfile:
+        for query in qfile:
+            # Strip newline character.
+            query = query.replace('\n', '')
+            prefix_notation = parse_query.infix_to_prefix(query)
+            nested_queries = parse_query.process_infix_query(prefix_notation)
+            print nested_queries

@@ -8,11 +8,5 @@ search:
 tests:
 	nosetests
 
-clean:
-	rmtxt rmpyc
-
-rmtxt:
-	rm *.txt
-
 rmpyc:
 	rm *.pyc
