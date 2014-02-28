@@ -34,10 +34,11 @@ class Dictionary(object):
     def to_json(self):
         terms = {}
         for term in self.terms.keys():
+            # Use crappy keys to save space.
             terms[term] = {
-                'frequency': self.get_frequency(term),
-                'head': self.get_head(term),
-                'tail': self.get_tail(term),
+                'f': self.get_frequency(term),
+                'h': self.get_head(term),
+                't': self.get_tail(term),
             }
 
         dict_repr = {
@@ -54,9 +55,9 @@ class Dictionary(object):
         d = Dictionary()
         d.doc_ids = dict_repr['doc_ids']
         for term, val in dict_repr['terms'].iteritems():
-            d.terms[term].head = val['head']
-            d.terms[term].tail = val['tail']
-            d.terms[term].set_frequency(val['frequency'])
+            d.terms[term].head = val['h']
+            d.terms[term].tail = val['t']
+            d.terms[term].set_frequency(val['f'])
 
         return d
 

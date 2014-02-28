@@ -1,9 +1,11 @@
 import os
+import math
 from dictionary import Dictionary
 from postings_file import PostingsFile, PostingsFileEntry
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import PorterStemmer
 
+SKIP_POINTER_THRESHOLD = 3
 
 def build(training_dir, dict_file, postings_file):
     dictionary = Dictionary()
@@ -27,11 +29,11 @@ def build(training_dir, dict_file, postings_file):
                 if not dictionary.has_entry(term, doc_id):
                     current_node_location = postings_file.pointer
 
-                    if dictionary.number_of_docs(term) != 0:
+                    if dictionary.get_frequency(term) != 0:
                         # Update previous node in the linked list.
                         previous_node_location = dictionary.get_tail(term)
-                        previous_entry = PostingsFileEntry.from_string(
-                            postings_file.read_entry(previous_node_location))
+                        previous_entry = \
+                            postings_file.get_entry(previous_node_location)
                         postings_file.write_entry(
                             previous_entry.doc_id,
                             current_node_location,
@@ -42,8 +44,39 @@ def build(training_dir, dict_file, postings_file):
                         doc_id, write_location=current_node_location)
 
         # Skip pointers
-        for terms in dictionary.all_terms():
-            # TODO(michael)
+        for term in dictionary.all_terms():
+            term_frequency = dictionary.get_frequency(term)
+            skip_pointer_frequency = int(math.sqrt(term_frequency))
+
+            # Don't bother if too low.
+            if skip_pointer_frequency < SKIP_POINTER_THRESHOLD:
+                continue
+
+            head = dictionary.get_head(term)
+            entries = postings_file.get_entry_list_from_pointer(head)
+
+            for idx in xrange(term_frequency):
+                if idx % skip_pointer_frequency == 0:
+                    skip_to = idx + skip_pointer_frequency
+
+                    # Nothing to point to.
+                    if skip_to >= term_frequency:
+                        continue
+
+                    current_entry = entries[idx]
+                    skip_to_entry = entries[skip_to]
+
+                    # Add skip pointer.
+                    postings_file.write_entry(
+                        current_entry.doc_id,
+                        current_entry.next_pointer,
+                        skip_to_entry.own_pointer,
+                        skip_to_entry.doc_id,
+                        write_location=current_entry.own_pointer)
+
+    # Write dictionary to file.
+    with open(dict_file, 'w') as dictionary_file:
+        dictionary_file.write(dictionary.to_json())
 
 
 def process_file(filepath):
