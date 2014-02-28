@@ -37,7 +37,7 @@ class PostingsFile(object):
         postings_entry = PostingsFileEntry(
             doc_id, next_pointer, skip_pointer, skip_doc_id)
 
-        self.seek(write_location)
+        self.f.seek(write_location)
         self.f.write(postings_entry.to_string())
 
 

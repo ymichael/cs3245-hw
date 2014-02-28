@@ -1,39 +1,54 @@
 import collections
 
+
 class Dictionary(object):
     def __init__(self):
-        self.terms = collections.defaultdict(Term)
+        self.terms = collections.defaultdict(DocumentIdLinkedList)
+
+    def number_of_docs(self, term):
+        return self.terms[term].length
+
+    def has_entry(self, term, doc_id):
+        return self.terms[term].has_entry(doc_id)
 
     def add_term(self, term, doc_id, pointer):
-        if self.terms[term].freq == 0:
-            self.terms[term].set_pointer(pointer)
+        self.terms[term].add_doc(doc_id, pointer)
 
-        self.terms[term].add_doc(doc_id)
+    def get_frequency(self, term):
+        return self.terms[term].length
 
-    def get_freq(self, term):
-        return self.terms[term].freq
+    def get_head(self, term):
+        return self.terms[term].head
 
-    def get_pointer(self, term):
-        return self.terms[term].pointer
+    def get_tail(self, term):
+        return self.terms[term].tail
 
 
-
-class Term(object):
+class DocumentIdLinkedList(object):
     def __init__(self):
         self.doc_ids = []
-        self._pointer = None
+        self._head = None
+        self._tail = None
 
-    def add_doc(self, doc_id):
-        if doc_id not in self.doc_ids:
+    def has_entry(self, doc_id):
+        return doc_id in self.doc_ids
+
+    def add_doc(self, doc_id, pointer):
+        if self.length == 0:
+            self._head = pointer
+
+        if not self.has_entry(doc_id):
             self.doc_ids.append(doc_id)
+            self._tail = pointer
 
     @property
-    def freq(self):
+    def length(self):
         return len(self.doc_ids)
 
     @property
-    def pointer(self):
-        return self._pointer
+    def head(self):
+        return self._head
 
-    def set_pointer(self, pointer):
-        self._pointer = pointer
+    @property
+    def tail(self):
+        return self._tail

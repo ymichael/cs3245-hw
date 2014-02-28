@@ -1,5 +1,6 @@
 import os
 from dictionary import Dictionary
+from postings_file import PostingsFile, PostingsFileEntry
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import PorterStemmer
 
@@ -14,23 +15,31 @@ def build(training_dir, dict_file, postings_file):
 
     # Two loops here to have control over the size of the loop.
     # NOTE(michael): for testing.
-    # filepaths = filepaths[:10]
+    filepaths = filepaths[:10]
 
-    with open(postings_file, 'w') as postings_file:
+    with PostingsFile(postings_file) as postings_file:
         for filepath in filepaths:
             terms = process_file(filepath)
             # TODO(michael): Making assumption that document is an int.
             doc_id = int(os.path.basename(filepath))
 
-            # for term in terms:
-                # current_pointer = postings_file.tell()
-                # previous_pointer = dictionary.previous_entry(term)
-                # dictionary.set_next_pointer(current_pointer)
+            for term in terms:
+                if not dictionary.has_entry(term, doc_id):
+                    current_node_location = postings_file.pointer
 
-                # d.add_term(term, doc_id)
+                    if dictionary.number_of_docs(term) != 0:
+                        # Update previous node in the linked list.
+                        previous_node_location = dictionary.get_tail(term)
+                        previous_entry = PostingsFileEntry.from_string(
+                            postings_file.read_entry(previous_node_location))
+                        postings_file.write_entry(
+                            previous_entry.doc_id,
+                            current_node_location,
+                            write_location=previous_node_location)
 
-                # entry = '%8d %8d' % (postings_file.tell(), doc_id)
-                # print entry
+                    dictionary.add_term(term, doc_id, current_node_location)
+                    postings_file.write_entry(
+                        doc_id, write_location=current_node_location)
 
 
 def process_file(filepath):
