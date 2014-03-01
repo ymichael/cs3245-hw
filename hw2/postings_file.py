@@ -1,9 +1,10 @@
 class PostingsFile(object):
-    def __init__(self, filename):
+    def __init__(self, filename, mode):
         self.filename = filename
+        self.mode = mode
 
     def __enter__(self):
-        self.f = open(self.filename, 'w+')
+        self.f = open(self.filename, self.mode)
         return self
 
     def __exit__(self, type, value, traceback):

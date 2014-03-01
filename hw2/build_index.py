@@ -19,7 +19,7 @@ def build(training_dir, dict_file, postings_file):
     # NOTE(michael): for testing.
     # filepaths = filepaths[:10]
 
-    with PostingsFile(postings_file) as postings_file:
+    with PostingsFile(postings_file, mode='w+') as postings_file:
         for filepath in filepaths:
             terms = process_file(filepath)
             # TODO(michael): Making assumption that document is an int.

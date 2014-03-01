@@ -11,7 +11,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
 
     # Process queries.
     with open(queries_file) as qfile:
-        with PostingsFile(postings_file) as pfile:
+        with PostingsFile(postings_file, mode='r') as pfile:
             for query in qfile:
                 # Strip newline character.
                 query = query.replace('\n', '')

@@ -5,21 +5,21 @@ import os
 
 def test_postings_file_noop():
     filename = 'test'
-    with PostingsFile(filename) as pfile:
+    with PostingsFile(filename, 'w+') as pfile:
         pass
     os.remove(filename)
 
 
 def test_postings_file_pointer():
     filename = 'test'
-    with PostingsFile(filename) as pfile:
+    with PostingsFile(filename, 'w+') as pfile:
         assert_eq(0, pfile.pointer)
     os.remove(filename)
 
 
 def test_postings_file_seek():
     filename = 'test'
-    with PostingsFile(filename) as pfile:
+    with PostingsFile(filename, 'w+') as pfile:
         assert_eq(0, pfile.pointer)
         pfile.seek(10)
         assert_eq(10, pfile.pointer)
@@ -28,7 +28,7 @@ def test_postings_file_seek():
 
 def test_postings_file_write_entry():
     filename = 'test'
-    with PostingsFile(filename) as pfile:
+    with PostingsFile(filename, 'w+') as pfile:
         assert_eq(0, pfile.pointer)
         pfile.write_entry(1)
         pfile.write_entry(2)
@@ -51,7 +51,7 @@ def test_postings_file_write_entry():
 
 def test_postings_file_write_entry_overwrite():
     filename = 'test'
-    with PostingsFile(filename) as pfile:
+    with PostingsFile(filename, 'w+') as pfile:
         assert_eq(0, pfile.pointer)
         write_location = 0
         pfile.write_entry(1, write_location=write_location)
@@ -77,7 +77,7 @@ def test_postings_file_write_entry_overwrite():
 
 def test_postings_file_get_entry():
     filename = 'test'
-    with PostingsFile(filename) as pfile:
+    with PostingsFile(filename, 'w+') as pfile:
         head = pfile.pointer
         pfile.write_entry(1)
 
@@ -93,7 +93,7 @@ def test_postings_file_get_entry():
 
 def test_postings_file_get_entry_from_pointer():
     filename = 'test'
-    with PostingsFile(filename) as pfile:
+    with PostingsFile(filename, 'w+') as pfile:
         head = pfile.pointer
         prev_ptr = head
         pfile.write_entry(1)
