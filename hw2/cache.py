@@ -10,7 +10,6 @@ def cached_method(func):
              str(kwargs))
 
         if global_cache.get(cache_key):
-            print 'cache hit'
             return global_cache[cache_key]
         result = func(*args, **kwargs)
         global_cache[cache_key] = result
