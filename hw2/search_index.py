@@ -3,6 +3,7 @@ import cache
 from dictionary import Dictionary
 from build_index import process_word
 from postings_file import PostingsFile, PostingsFileEntry
+from boolean_operations import *
 
 
 def search(dictionary_file, postings_file, queries_file, output_file):
@@ -92,24 +93,8 @@ def execute_query(query, dictionary, pfile):
                 parse_query.Query(tuple(operand2.query_tuple[1:])),
                 dictionary, pfile)
 
-        results = []
-        idx_a = 0
-        idx_b = 0
-        while idx_a < len(a_results) and idx_b < len(b_results):
-            if a_results[idx_a] < b_results[idx_b]:
-                results.append(a_results[idx_a])
-                idx_a += 1
-            elif b_results[idx_b] < a_results[idx_a]:
-                idx_b += 1
-            else:
-                idx_a += 1
-                idx_b += 1
+        return list_a_and_not_list_b(a_results, b_results)
 
-        while idx_a < len(a_results):
-            results.append(a_results[idx_a])
-            idx_a += 1
-
-        return results
 
     # Generic AND, OR operations. Enumerate the three cases.
     # TODO(michael): Break up into functions. Currently hard due to nature of
@@ -133,71 +118,17 @@ def execute_query(query, dictionary, pfile):
         ptr2 = operand2_results
 
         if operator == 'AND':
-            results = []
-            while ptr1 and ptr2:
-                if ptr1.doc_id == ptr2.doc_id:
-                    results.append(ptr1.doc_id)
-                    ptr1 = pfile.get_entry(ptr1.next_pointer)
-                    ptr2 = pfile.get_entry(ptr2.next_pointer)
-                elif ptr1.doc_id < ptr2.doc_id:
-                    while ptr1 and ptr1.doc_id < ptr2.doc_id:
-                        if ptr1.skip_pointer and ptr1.skip_doc_id <= ptr2.doc_id:
-                            ptr1 = pfile.get_entry(ptr1.skip_pointer)
-                        else:
-                            ptr1 = pfile.get_entry(ptr1.next_pointer)
-                else:
-                    while ptr2 and ptr2.doc_id < ptr1.doc_id:
-                        if ptr2.skip_pointer and ptr2.skip_doc_id <= ptr1.doc_id:
-                            ptr2 = pfile.get_entry(ptr2.skip_pointer)
-                        else:
-                            ptr2 = pfile.get_entry(ptr2.next_pointer)
-            return results
+            return ll_a_and_ll_b(ptr1, ptr2)
         else:
             # OR operator
-            results = []
-            while ptr1:
-                while ptr2 and ptr2.doc_id <= ptr1.doc_id:
-                    if len(results) and results[-1] != ptr2.doc_id:
-                        results.append(ptr2.doc_id)
-                    ptr2 = pfile.get_entry(ptr2.next_pointer)
-
-                results.append(ptr1.doc_id)
-                ptr1 = pfile.get_entry(ptr1.next_pointer)
-            return results
-
+            return ll_a_or_ll_b(ptr1, ptr2)
 
     # Case 2: Both are arrays (Do simple python intersect/union.)
     if operand1_is_query and operand2_is_query:
         if operator == 'AND':
-            results = []
-            index1 = 0
-            index2 = 0
-            while index1 < len(operand1_results) and \
-                    index2 < len(operand2_results):
-                if operand1_results[index1] == operand2_results[index2]:
-                    results.append(operand1_results[index1])
-                    index1 += 1
-                    index2 += 1
-                elif operand1_results[index1] < operand2_results[index2]:
-                    # TODO(michael): Use binary search here.
-                    index1 += 1
-                else:
-                    # TODO(michael): Use binary search here.
-                    index2 += 1
-            return results
+            return list_a_and_list_b(operand1_results, operand2_results)
         else:
-            # OR operator
-            results = []
-            index2 = 0
-            for doc_id in operand1_results:
-                while index2 < len(operand2_results) and \
-                        operand2_results[index2] < doc_id:
-                    if len(results) and \
-                            results[-1] != operand2_results[index2]:
-                        results.append(operand2_results[index2])
-                    index2 += 1
-                results.append(doc_id)
-            return results
+            return list_a_or_list_b(operand1_results, operand2_results)
 
     # Case 3: One of each type.
     if operand1_is_query:
@@ -207,39 +138,9 @@ def execute_query(query, dictionary, pfile):
         in_memory_results = operand2_results
         linked_list_results = operand1_results
 
-    ptr1 = linked_list_results
-    idx2 = 0
-    results = []
-
     if operator == 'AND':
-        while ptr1 and idx2 < len(in_memory_results):
-            if ptr1.doc_id == in_memory_results[idx2]:
-                results.append(ptr1.doc_id)
-                ptr1 = pfile.get_entry(ptr1.next_pointer)
-                idx2 += 1
-            elif ptr1.doc_id < in_memory_results[idx2]:
-                while ptr1 and ptr1.doc_id < in_memory_results[idx2]:
-                    if ptr1.skip_pointer and \
-                            ptr1.skip_doc_id <= in_memory_results[idx2]:
-                        ptr1 = pfile.get_entry(ptr1.skip_pointer)
-                    else:
-                        ptr1 = pfile.get_entry(ptr1.next_pointer)
-            else:
-                while idx2 < len(in_memory_results) and \
-                        in_memory_results[idx2] < ptr1.doc_id:
-                    idx2 += 1
-        return results
+        return ll_a_and_list_b(linked_list_results, in_memory_results)
     else:
-        # OR Operator
-        while ptr1:
-            while idx2 < len(in_memory_results) and \
-                    in_memory_results[idx2] <= ptr1.doc_id:
-                if len(results) and \
-                        results[-1] != in_memory_results[idx2]:
-                    results.append(in_memory_results[idx2])
-                idx2 += 1
-            results.append(ptr1.doc_id)
-            ptr1 = pfile.get_entry(ptr1.next_pointer)
-        return results
+        return ll_a_or_list_b(linked_list_results, in_memory_results)
 
     return []
