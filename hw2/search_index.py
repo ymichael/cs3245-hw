@@ -34,10 +34,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
 
 @cache.cached_function(1)
 def execute_query(query, dictionary, pfile):
-    if isinstance(query, parse_query.Query):
-        query_tuple = query.query_tuple
-    else:
-        query_tuple = (query,)
+    query_tuple = query.query_tuple
     if len(query_tuple) == 1:
         term = query_tuple[0]
         return pfile.get_doc_ids_from_pointer(
@@ -74,16 +71,22 @@ def execute_query(query, dictionary, pfile):
         # Desired form: A AND NOT B
         if (operand1_is_query and operand1.operator == 'NOT' and \
                 operand2_is_query and operand2.operator == 'NOT'):
+            if not isinstance(operand1, parse_query.Query):
+                operand1 = parse_query.Query((operand1,))
             a_results = execute_query(operand1, dictionary, pfile)
             b_results = execute_query(
                 parse_query.Query(tuple(operand2.query_tuple[1:])),
                 dictionary, pfile)
         elif operand1_is_query and operand1.operator == 'NOT':
+            if not isinstance(operand2, parse_query.Query):
+                operand2 = parse_query.Query((operand2,))
             a_results = execute_query(operand2, dictionary, pfile)
             b_results = execute_query(
                 parse_query.Query(tuple(operand1.query_tuple[1:])),
                 dictionary, pfile)
         else:
+            if not isinstance(operand1, parse_query.Query):
+                operand1 = parse_query.Query((operand1,))
             a_results = execute_query(operand1, dictionary, pfile)
             b_results = execute_query(
                 parse_query.Query(tuple(operand2.query_tuple[1:])),
