@@ -1,0 +1,29 @@
+== Essay Questions ==
+
+1. In the homework assignment, we are using character-based ngrams, i.e., the gram units are characters. Do you expect token-based ngram models to perform better?
+
+Expect token based to do better than character based ngram models. This is based on the intuition that token-based models gives us a better distinction between the languages.
+
+Upon further investigation, it appears that for word-based models to work, we need a larger/and more comprehensive training set.
+
+===
+
+2. What do you think will happen if we provided more data for each category for you to build the language models? What if we only provided more data for Indonesian?
+
+If we were given more training data, We would be able to predict the language of a given piece of unlabelled input with higher confidence/accuracy.
+
+If we were only given more data for Indonesian, I suspect that we will do better overall as well, though not as well if we got less data but more evenly spread out.
+
+===
+
+3. What do you think will happen if you strip out punctuations and/or numbers? What about converting upper case characters to lower case?
+
+I think that this might give us more accuracy for certain languages. In particular, this would potentially help reduce noise from our training set/input (text in all caps etc.)
+
+===
+
+4. We use 4-gram models in this homework assignment. What do you think will happen if we varied the ngram size, such as using unigrams, bigrams and trigrams?
+
+I think that, especially for our character based ngram model, using larger n helps to improve accuracy. (up to a reasonable length). For instance in a unigram model, ('a', ) would not be very helpful in differentiating/identifying which language this gram would possible come from since most languages would most likely have the character 'a' in its vocabulary. In comparison, the gram ('a', 'c', 'h', 'e') in a 4-gram model would be way more helpful since only particular languages would place these 4 characters, in this permutation, together.
+
+The speed of computation also increases as we increase n. Since the upper bound on the size of the overall vocabulary and the memory require increases as n increases.
