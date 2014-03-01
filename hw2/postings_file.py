@@ -58,6 +58,10 @@ class PostingsFile(object):
 
         return entries
 
+    def get_doc_ids_from_pointer(self, head):
+        entries = self.get_entry_list_from_pointer(head)
+        return [entry.doc_id for entry in entries]
+
     def write_entry(
             self,
             doc_id,

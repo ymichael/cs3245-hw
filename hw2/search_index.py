@@ -32,9 +32,8 @@ def execute_query(query, dictionary, pfile):
     query_tuple = query.query_tuple
     if len(query_tuple) == 1:
         term = query_tuple[0]
-        entries = pfile.get_entry_list_from_pointer(
+        return pfile.get_doc_ids_from_pointer(
             dictionary.get_head(term))
-        return [entry.doc_id for entry in entries]
 
     operator = query_tuple[0]
     operands = query_tuple[1:]
@@ -45,9 +44,8 @@ def execute_query(query, dictionary, pfile):
         if is_query:
             results = execute_query(operands[0], dictionary, pfile)
         else:
-            results = [entry.doc_id for entry in
-                       pfile.get_entry_list_from_pointer(
-                            dictionary.get_head(operands[0]))]
+            results = pfile.get_doc_ids_from_pointer(
+                dictionary.get_head(operands[0]))
         return [doc for doc in all_docs if doc not in results]
 
     # Total 3 cases:
