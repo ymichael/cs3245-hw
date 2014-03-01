@@ -102,7 +102,7 @@ def execute_query(query, dictionary, pfile):
             results = []
             while ptr1:
                 while ptr2 and ptr2.doc_id <= ptr1.doc_id:
-                    if results[-1] != ptr2.doc_id:
+                    if len(results) and results[-1] != ptr2.doc_id:
                         results.append(ptr2.doc_id)
                     ptr2 = pfile.get_entry(ptr2.next_pointer)
 
@@ -137,7 +137,8 @@ def execute_query(query, dictionary, pfile):
             for doc_id in operand1_results:
                 while index2 < len(operand2_results) and \
                         operand2_results[index2] < doc_id:
-                    if results[-1] != operand2_results[index2]:
+                    if len(results) and \
+                            results[-1] != operand2_results[index2]:
                         results.append(operand2_results[index2])
                     index2 += 1
                 results.append(doc_id)
@@ -178,7 +179,8 @@ def execute_query(query, dictionary, pfile):
         while ptr1:
             while idx2 < len(in_memory_results) and \
                     in_memory_results[idx2] <= ptr1.doc_id:
-                if results[-1] != in_memory_results[idx2]:
+                if len(results) and \
+                        results[-1] != in_memory_results[idx2]:
                     results.append(in_memory_results[idx2])
                 idx2 += 1
             results.append(ptr1.doc_id)
