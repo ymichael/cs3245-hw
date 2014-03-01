@@ -1,0 +1,18 @@
+apple
+bill
+car
+dog
+eggs
+NOT apple
+NOT bill
+NOT car
+NOT dog
+nothing AND interesting
+pine AND money
+show AND nothing
+vista AND pine
+bill OR apple
+fake OR dog
+Gates AND NOT eggs
+show AND NOT nothing
+vista AND NOT pine
