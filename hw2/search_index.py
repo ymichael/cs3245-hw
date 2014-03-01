@@ -97,8 +97,6 @@ def execute_query(query, dictionary, pfile):
 
 
     # Generic AND, OR operations. Enumerate the three cases.
-    # TODO(michael): Break up into functions. Currently hard due to nature of
-    # dependencies on pfile and dicionary objects.
     if operand1_is_query:
         operand1_results = execute_query(operand1, dictionary, pfile)
     else:
