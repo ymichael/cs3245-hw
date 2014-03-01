@@ -104,6 +104,7 @@ class Query(object):
                 query_tuple = (operator, o1, o2)
 
         self.query_tuple = query_tuple
+        self.operator = query_tuple[0]
 
     def __repr__(self):
         return 'Query(%s)' % str(self.query_tuple)

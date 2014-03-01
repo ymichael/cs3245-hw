@@ -34,7 +34,10 @@ def search(dictionary_file, postings_file, queries_file, output_file):
 
 @cache.cached_function(1)
 def execute_query(query, dictionary, pfile):
-    query_tuple = query.query_tuple
+    if isinstance(query, parse_query.Query):
+        query_tuple = query.query_tuple
+    else:
+        query_tuple = (query,)
     if len(query_tuple) == 1:
         term = query_tuple[0]
         return pfile.get_doc_ids_from_pointer(
@@ -53,20 +56,67 @@ def execute_query(query, dictionary, pfile):
                 dictionary.get_head(operands[0]))
         return [doc for doc in all_docs if doc not in results]
 
+
     # Total 3 cases:
     # - Both linked lists (have not read posting into memory.)
     # - Both arrays (already have postings/results in memory.)
     # - 1 linked list, 1 array
     operand1 = operands[0]
+    operand2 = operands[1]
     operand1_is_query = isinstance(operand1, parse_query.Query)
+    operand2_is_query = isinstance(operand2, parse_query.Query)
+
+    # Optimisation for AND NOT queries.
+    if operator == 'AND' and \
+            (operand1_is_query or operand1_is_query) and \
+            ((operand1_is_query and operand1.operator == 'NOT') or
+                    (operand2_is_query and operand2.operator == 'NOT')):
+        # Desired form: A AND NOT B
+        if (operand1_is_query and operand1.operator == 'NOT' and \
+                operand2_is_query and operand2.operator == 'NOT'):
+            a_results = execute_query(operand1, dictionary, pfile)
+            b_results = execute_query(
+                parse_query.Query(tuple(operand2.query_tuple[1:])),
+                dictionary, pfile)
+        elif operand1_is_query and operand1.operator == 'NOT':
+            a_results = execute_query(operand2, dictionary, pfile)
+            b_results = execute_query(
+                parse_query.Query(tuple(operand1.query_tuple[1:])),
+                dictionary, pfile)
+        else:
+            a_results = execute_query(operand1, dictionary, pfile)
+            b_results = execute_query(
+                parse_query.Query(tuple(operand2.query_tuple[1:])),
+                dictionary, pfile)
+
+        results = []
+        idx_a = 0
+        idx_b = 0
+        while idx_a < len(a_results) and idx_b < len(b_results):
+            if a_results[idx_a] < b_results[idx_b]:
+                results.append(a_results[idx_a])
+                idx_a += 1
+            elif b_results[idx_b] < a_results[idx_a]:
+                idx_b += 1
+            else:
+                idx_a += 1
+                idx_b += 1
+
+        while idx_a < len(a_results):
+            results.append(a_results[idx_a])
+            idx_a += 1
+
+        return results
+
+    # Generic AND, OR operations. Enumerate the three cases.
+    # TODO(michael): Break up into functions. Currently hard due to nature of
+    # dependencies on pfile and dicionary objects.
     if operand1_is_query:
         operand1_results = execute_query(operand1, dictionary, pfile)
     else:
         operand1_results = \
             pfile.get_entry(dictionary.get_head(operand1))
 
-    operand2 = operands[1]
-    operand2_is_query = isinstance(operands[1], parse_query.Query)
     if operand2_is_query:
         operand2_results = \
             execute_query(operand2, dictionary, pfile)
@@ -76,7 +126,6 @@ def execute_query(query, dictionary, pfile):
 
     # Case 1: Both are linked lists
     if not operand1_is_query and not operand2_is_query:
-        # TODO(michael): use skip lists etc.
         ptr1 = operand1_results
         ptr2 = operand2_results
 
