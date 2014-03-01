@@ -15,6 +15,9 @@ def build(training_dir, dict_file, postings_file):
     for filename in os.listdir(training_dir):
         filepaths.append(os.path.join(training_dir, filename))
 
+    # Sort the filepaths according to doc_id
+    filepaths = sorted(filepaths, key=lambda x: int(os.path.basename(x)))
+
     # Two loops here to have control over the size of the loop.
     # NOTE(michael): for testing.
     # filepaths = filepaths[:10]
