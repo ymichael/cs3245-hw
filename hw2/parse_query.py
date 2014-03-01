@@ -93,6 +93,16 @@ def process_infix_query(infix_list):
 class Query(object):
     """Wraper object for queries."""
     def __init__(self, query_tuple):
+        # Sort operands to make caching easier.
+        if len(query_tuple) == 3:
+            operator = query_tuple[0]
+            o1 = query_tuple[1]
+            o2 = query_tuple[2]
+            if o1 > o2:
+                query_tuple = (operator, o2, o1)
+            else:
+                query_tuple = (operator, o1, o2)
+
         self.query_tuple = query_tuple
 
     def __repr__(self):

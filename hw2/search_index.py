@@ -1,4 +1,5 @@
 import parse_query
+import cache
 from dictionary import Dictionary
 from build_index import process_word
 from postings_file import PostingsFile, PostingsFileEntry
@@ -28,6 +29,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                 print query, len(execute_query(query, dictionary, pfile))
 
 
+@cache.cached_function(1)
 def execute_query(query, dictionary, pfile):
     query_tuple = query.query_tuple
     if len(query_tuple) == 1:
