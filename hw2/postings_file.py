@@ -40,23 +40,19 @@ class PostingsFile(object):
 
         entry = PostingsFileEntry.from_string(
             self.read_entry(byte_no))
-        entry.set_own_pointer(byte_no)
+        entry.own_pointer = byte_no
+        entry.set_postings_file(self)
         return entry
 
     def get_entry_list_from_pointer(self, head):
         if head is None:
             return []
 
-        head_node = self.get_entry(head)
-
-        current_node = head_node
-        entries = [current_node]
-
-        # collect entries using pointers
-        while (current_node.next_pointer):
-            current_node = self.get_entry(
-                current_node.next_pointer)
+        current_node = self.get_entry(head)
+        entries = []
+        while (current_node):
             entries.append(current_node)
+            current_node = current_node.next()
 
         return entries
 
@@ -86,7 +82,21 @@ class PostingsFile(object):
         self.f.write(postings_entry.to_string())
 
 
-class PostingsFileEntry(object):
+class SkipListNode(object):
+    def val(self):
+        raise NotImplementedError()
+
+    def skip_val(self):
+        raise NotImplementedError()
+
+    def next(self):
+        raise NotImplementedError()
+
+    def skip(self):
+        raise NotImplementedError()
+
+
+class PostingsFileEntry(SkipListNode):
     FORMAT = "%010d %010d %010d %010d\n"
     SIZE = (10 * 4) + 4
 
@@ -103,13 +113,31 @@ class PostingsFileEntry(object):
         # (that'll link to another node # :x)
         self.next_pointer = next_pointer or None
         self.skip_pointer = skip_pointer or None
-        self._own_pointer = None
+        self.own_pointer = None
+        self._postings_file = None
 
-    def get_own_pointer(self):
-        return self._own_pointer
+    def set_postings_file(self, pfile):
+        self._postings_file = pfile
 
-    def set_own_pointer(self, own_pointer):
-        self.own_pointer = own_pointer
+    def val(self):
+        return self.doc_id
+
+    def skip_val(self):
+        return self.skip_doc_id
+
+    def next(self):
+        if not self.next_pointer:
+            return None
+        if self._postings_file is None:
+            raise Exception('Postings File is not set.')
+        return self._postings_file.get_entry(self.next_pointer)
+
+    def skip(self):
+        if not self.skip_pointer:
+            return None
+        if self._postings_file is None:
+            raise Exception('Postings File is not set.')
+        return self._postings_file.get_entry(self.skip_pointer)
 
     def to_string(self):
         return self.FORMAT % (
