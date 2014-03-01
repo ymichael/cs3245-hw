@@ -8,22 +8,25 @@ search:
 
 perf:
 	python search.py -d dictionary.txt -p postings.txt \
-		-q queries/queries_perf1.txt -o output.txt -time
+		-q queries/queries_perf1_simple.txt -o output.txt -time
 
 	python search.py -d dictionary.txt -p postings.txt \
-		-q queries/queries_perf2.txt -o output.txt -time
+		-q queries/queries_perf2_ands.txt -o output.txt -time
 
 	python search.py -d dictionary.txt -p postings.txt \
-		-q queries/queries_perf3.txt -o output.txt -time
+		-q queries/queries_perf3_ors.txt -o output.txt -time
 
 	python search.py -d dictionary.txt -p postings.txt \
-		-q queries/queries_perf4.txt -o output.txt -time
+		-q queries/queries_perf4_or_nots.txt -o output.txt -time
 
 	python search.py -d dictionary.txt -p postings.txt \
-		-q queries/queries_perf5.txt -o output.txt -time
+		-q queries/queries_perf5_and_nots.txt -o output.txt -time
 
 	python search.py -d dictionary.txt -p postings.txt \
-		-q queries/queries_perf6.txt -o output.txt -time
+		-q queries/queries_perf6_braces.txt -o output.txt -time
+
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries_perf7_repeat.txt -o output.txt -time
 
 tests:
 	nosetests
