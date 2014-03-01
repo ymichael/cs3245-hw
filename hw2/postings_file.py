@@ -90,9 +90,12 @@ class PostingsFileEntry(object):
             skip_pointer=0,
             skip_doc_id=0):
         self.doc_id = doc_id
-        self.next_pointer = next_pointer
-        self.skip_pointer = skip_pointer
         self.skip_doc_id = skip_doc_id
+
+        # NOTE(michael): next/skip pointers should never be 0.
+        # (that'll link to another node # :x)
+        self.next_pointer = next_pointer or None
+        self.skip_pointer = skip_pointer or None
         self._own_pointer = None
 
     def get_own_pointer(self):
@@ -104,8 +107,8 @@ class PostingsFileEntry(object):
     def to_string(self):
         return self.FORMAT % (
             self.doc_id,
-            self.next_pointer,
-            self.skip_pointer,
+            self.next_pointer or 0,
+            self.skip_pointer or 0,
             self.skip_doc_id)
 
     def __str__(self):
