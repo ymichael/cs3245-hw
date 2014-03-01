@@ -32,7 +32,9 @@ def execute_query(query, dictionary, pfile):
     query_tuple = query.query_tuple
     if len(query_tuple) == 1:
         term = query_tuple[0]
-        return pfile.get_entry(dictionary.get_head(term))
+        entries = pfile.get_entry_list_from_pointer(
+            dictionary.get_head(term))
+        return [entry.doc_id for entry in entries]
 
     operator = query_tuple[0]
     operands = query_tuple[1:]
@@ -66,37 +68,39 @@ def execute_query(query, dictionary, pfile):
     if not operand1_is_query and not operand2_is_query:
         # TODO(michael): use skip lists etc.
         ptr1 = operand1_results
-        ptr2 = operand1_results
+        ptr2 = operand2_results
 
         if operator == 'AND':
             results = []
             while ptr1 and ptr2:
                 if ptr1.doc_id == ptr2.doc_id:
                     results.append(ptr1.doc_id)
-                    ptr1 = pfile.get_entry(dictionary.get_head(ptr1.next_pointer))
-                    ptr2 = pfile.get_entry(dictionary.get_head(ptr2.next_pointer))
+                    ptr1 = pfile.get_entry(ptr1.next_pointer)
+                    ptr2 = pfile.get_entry(ptr2.next_pointer)
                 elif ptr1.doc_id < ptr2.doc_id:
-                    if ptr1.skip_pointer and ptr1.skip_doc_id <= ptr2.doc_id:
-                        ptr1 = pfile.get_entry(dictionary.get_head(ptr1.skip_pointer))
-                    else:
-                        ptr1 = pfile.get_entry(dictionary.get_head(ptr1.next_pointer))
+                    while ptr1 and ptr1.doc_id < ptr2.doc_id:
+                        if ptr1.skip_pointer and ptr1.skip_doc_id <= ptr2.doc_id:
+                            ptr1 = pfile.get_entry(ptr1.skip_pointer)
+                        else:
+                            ptr1 = pfile.get_entry(ptr1.next_pointer)
                 else:
-                    if ptr2.skip_pointer and ptr2.skip_doc_id <= ptr1.doc_id:
-                        ptr2 = pfile.get_entry(dictionary.get_head(ptr2.skip_pointer))
-                    else:
-                        ptr2 = pfile.get_entry(dictionary.get_head(ptr2.next_pointer))
+                    while ptr2 and ptr2.doc_id < ptr1.doc_id:
+                        if ptr2.skip_pointer and ptr2.skip_doc_id <= ptr1.doc_id:
+                            ptr2 = pfile.get_entry(ptr2.skip_pointer)
+                        else:
+                            ptr2 = pfile.get_entry(ptr2.next_pointer)
             return results
         else:
             # OR operator
             results = []
-            while ptr1 and ptr1.next_pointer:
-                while ptr2 and ptr2.doc_id < ptr1.doc_id:
+            while ptr1:
+                while ptr2 and ptr2.doc_id <= ptr1.doc_id:
                     if results[-1] != ptr2.doc_id:
                         results.append(ptr2.doc_id)
-                    ptr2 = pfile.get_entry(dictionary.get_head(ptr2.next_pointer))
+                    ptr2 = pfile.get_entry(ptr2.next_pointer)
 
                 results.append(ptr1.doc_id)
-                ptr1 = pfile.get_entry(dictionary.get_head(ptr1.next_pointer))
+                ptr1 = pfile.get_entry(ptr1.next_pointer)
             return results
 
 
