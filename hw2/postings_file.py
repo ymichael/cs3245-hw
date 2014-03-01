@@ -4,10 +4,16 @@ class PostingsFile(object):
         self.mode = mode
 
     def __enter__(self):
-        self.f = open(self.filename, self.mode)
+        self.open()
         return self
 
     def __exit__(self, type, value, traceback):
+        self.close()
+
+    def open(self):
+        self.f = open(self.filename, self.mode)
+
+    def close(self):
         self.f.close()
 
     @property
