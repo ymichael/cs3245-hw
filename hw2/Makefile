@@ -7,12 +7,23 @@ search:
 		-q queries/queries_basic.txt -o output.txt
 
 perf:
-	time python search.py -d dictionary.txt -p postings.txt \
-		-q queries/queries_perf.txt -o output.txt > /dev/null
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries_perf1.txt -o output.txt -time
 
-perf2:
-	time python search.py -d dictionary.txt -p postings.txt \
-		-q queries/queries_perf2.txt -o output.txt > /dev/null
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries_perf2.txt -o output.txt -time
+
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries_perf3.txt -o output.txt -time
+
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries_perf4.txt -o output.txt -time
+
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries_perf5.txt -o output.txt -time
+
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries_perf6.txt -o output.txt -time
 
 tests:
 	nosetests

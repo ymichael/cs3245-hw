@@ -1,4 +1,12 @@
 import sys
+import time
+
+
+def has_flag(flag):
+    for arg in sys.argv:
+        if flag == arg:
+            return True
+    return False
 
 
 def get_flag_value(flag):
@@ -18,6 +26,7 @@ Options:
   -p        Path to save postings file.
   -q        Path to file containing queries
   -o        Path to output query results
+  -time     Timing mode (to measure performance)     
 """
 
 
@@ -35,11 +44,20 @@ def main():
         sys.exit(2)
 
     import search_index
+
+
+    if has_flag('-time'):
+        start = time.time()
+
     search_index.search(
         dictionary_file,
         postings_file,
         queries_file,
         output_file)
+
+    if has_flag('-time'):
+        time_taken = time.time() - start
+        print '%s: Time taken = %.2f secs' % (queries_file, time_taken)
 
 if __name__ == '__main__':
     main()
