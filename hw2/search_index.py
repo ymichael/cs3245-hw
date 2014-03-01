@@ -25,7 +25,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     processed.append(token)
 
                 query = parse_query.process_infix_query(processed)
-                print execute_query(query, dictionary, pfile)
+                print query, len(execute_query(query, dictionary, pfile))
 
 
 def execute_query(query, dictionary, pfile):
@@ -40,8 +40,15 @@ def execute_query(query, dictionary, pfile):
     operands = query_tuple[1:]
 
     if operator == 'NOT':
-        # TODO(michael)
-        return []
+        is_query = isinstance(operands[0], parse_query.Query)
+        all_docs = dictionary.all_docs()
+        if is_query:
+            results = execute_query(operands[0], dictionary, pfile)
+        else:
+            results = [entry.doc_id for entry in
+                       pfile.get_entry_list_from_pointer(
+                            dictionary.get_head(operands[0]))]
+        return [doc for doc in all_docs if doc not in results]
 
     # Total 3 cases:
     # - Both linked lists (have not read posting into memory.)
@@ -143,6 +150,39 @@ def execute_query(query, dictionary, pfile):
     else:
         in_memory_results = operand2_results
         linked_list_results = operand1_results
-    # TODO(michael)
+
+    ptr1 = linked_list_results
+    idx2 = 0
+    results = []
+
+    if operator == 'AND':
+        while ptr1 and idx2 < len(in_memory_results):
+            if ptr1.doc_id == in_memory_results[idx2]:
+                results.append(ptr1.doc_id)
+                ptr1 = pfile.get_entry(ptr1.next_pointer)
+                idx2 += 1
+            elif ptr1.doc_id < in_memory_results[idx2]:
+                while ptr1 and ptr1.doc_id < in_memory_results[idx2]:
+                    if ptr1.skip_pointer and \
+                            ptr1.skip_doc_id <= in_memory_results[idx2]:
+                        ptr1 = pfile.get_entry(ptr1.skip_pointer)
+                    else:
+                        ptr1 = pfile.get_entry(ptr1.next_pointer)
+            else:
+                while idx2 < len(in_memory_results) and \
+                        in_memory_results[idx2] < ptr1.doc_id:
+                    idx2 += 1
+        return results
+    else:
+        # OR Operator
+        while ptr1:
+            while idx2 < len(in_memory_results) and \
+                    in_memory_results[idx2] <= ptr1.doc_id:
+                if results[-1] != in_memory_results[idx2]:
+                    results.append(in_memory_results[idx2])
+                idx2 += 1
+            results.append(ptr1.doc_id)
+            ptr1 = pfile.get_entry(ptr1.next_pointer)
+        return results
 
     return []
