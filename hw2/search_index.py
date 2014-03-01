@@ -11,22 +11,25 @@ def search(dictionary_file, postings_file, queries_file, output_file):
         dictionary = Dictionary.from_json(dict_file.read())
 
     # Process queries.
-    with open(queries_file) as qfile:
-        with PostingsFile(postings_file, mode='r') as pfile:
-            for query in qfile:
-                # Strip newline character.
-                query = query.replace('\n', '')
-                prefix_notation = parse_query.infix_to_prefix(query)
+    with open(output_file, 'w+') as output:
+        with open(queries_file) as qfile:
+            with PostingsFile(postings_file, mode='r') as pfile:
+                for query in qfile:
+                    # Strip newline character.
+                    query = query.replace('\n', '')
+                    prefix_notation = parse_query.infix_to_prefix(query)
 
-                # Process all words in the query here.
-                processed = []
-                for token in prefix_notation:
-                    if parse_query.is_operand(token):
-                        token = process_word(token)
-                    processed.append(token)
+                    # Process all words in the query here.
+                    processed = []
+                    for token in prefix_notation:
+                        if parse_query.is_operand(token):
+                            token = process_word(token)
+                        processed.append(token)
 
-                query = parse_query.process_infix_query(processed)
-                print query, len(execute_query(query, dictionary, pfile))
+                    query = parse_query.process_infix_query(processed)
+                    result = execute_query(query, dictionary, pfile)
+
+                    output.write('%s\n' % ' '.join([str(x) for x in result]))
 
 
 @cache.cached_function(1)
