@@ -63,12 +63,12 @@ def is_query(op):
 def get_results(op, dictionary, pfile, force_list=False):
     if is_query(op):
         return execute_query(op, dictionary, pfile)
+    elif force_list:
+        return execute_query(parse_query.Query((op,)), dictionary, pfile)
     else:
+        # TODO(michael): Reuse previously cached values if exists
         entry_ptr = dictionary.get_head(op)
-        if force_list:
-            return pfile.get_doc_ids_from_pointer(entry_ptr)
-        else:
-            return pfile.get_entry(entry_ptr)
+        return pfile.get_entry(entry_ptr)
 
 
 def not_operation(operand, dictionary, pfile):
