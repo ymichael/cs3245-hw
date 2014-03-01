@@ -45,100 +45,88 @@ def execute_query(query, dictionary, pfile):
     operands = query_tuple[1:]
 
     if operator == 'NOT':
-        is_query = isinstance(operands[0], parse_query.Query)
-        all_docs = dictionary.all_docs()
-        if is_query:
-            results = execute_query(operands[0], dictionary, pfile)
-        else:
-            results = pfile.get_doc_ids_from_pointer(
-                dictionary.get_head(operands[0]))
-        return [doc for doc in all_docs if doc not in results]
-
-
-    # Total 3 cases:
-    # - Both linked lists (have not read posting into memory.)
-    # - Both arrays (already have postings/results in memory.)
-    # - 1 linked list, 1 array
-    operand1 = operands[0]
-    operand2 = operands[1]
-    operand1_is_query = isinstance(operand1, parse_query.Query)
-    operand2_is_query = isinstance(operand2, parse_query.Query)
-
-    # Optimisation for AND NOT queries.
-    if operator == 'AND' and \
-            (operand1_is_query or operand1_is_query) and \
-            ((operand1_is_query and operand1.operator == 'NOT') or
-                    (operand2_is_query and operand2.operator == 'NOT')):
-        # Desired form: A AND NOT B
-        if (operand1_is_query and operand1.operator == 'NOT' and \
-                operand2_is_query and operand2.operator == 'NOT'):
-            if not isinstance(operand1, parse_query.Query):
-                operand1 = parse_query.Query((operand1,))
-            a_results = execute_query(operand1, dictionary, pfile)
-            b_results = execute_query(
-                parse_query.Query(tuple(operand2.query_tuple[1:])),
-                dictionary, pfile)
-        elif operand1_is_query and operand1.operator == 'NOT':
-            if not isinstance(operand2, parse_query.Query):
-                operand2 = parse_query.Query((operand2,))
-            a_results = execute_query(operand2, dictionary, pfile)
-            b_results = execute_query(
-                parse_query.Query(tuple(operand1.query_tuple[1:])),
-                dictionary, pfile)
-        else:
-            if not isinstance(operand1, parse_query.Query):
-                operand1 = parse_query.Query((operand1,))
-            a_results = execute_query(operand1, dictionary, pfile)
-            b_results = execute_query(
-                parse_query.Query(tuple(operand2.query_tuple[1:])),
-                dictionary, pfile)
-
-        return list_a_and_not_list_b(a_results, b_results)
-
-
-    # Generic AND, OR operations. Enumerate the three cases.
-    if operand1_is_query:
-        operand1_results = execute_query(operand1, dictionary, pfile)
-    else:
-        operand1_results = \
-            pfile.get_entry(dictionary.get_head(operand1))
-
-    if operand2_is_query:
-        operand2_results = \
-            execute_query(operand2, dictionary, pfile)
-    else:
-        operand2_results = \
-            pfile.get_entry(dictionary.get_head(operand2))
-
-    # Case 1: Both are linked lists
-    if not operand1_is_query and not operand2_is_query:
-        ptr1 = operand1_results
-        ptr2 = operand2_results
-
-        if operator == 'AND':
-            return ll_a_and_ll_b(ptr1, ptr2)
-        else:
-            # OR operator
-            return ll_a_or_ll_b(ptr1, ptr2)
-
-    # Case 2: Both are arrays (Do simple python intersect/union.)
-    if operand1_is_query and operand2_is_query:
-        if operator == 'AND':
-            return list_a_and_list_b(operand1_results, operand2_results)
-        else:
-            return list_a_or_list_b(operand1_results, operand2_results)
-
-    # Case 3: One of each type.
-    if operand1_is_query:
-        in_memory_results = operand1_results
-        linked_list_results = operand2_results
-    else:
-        in_memory_results = operand2_results
-        linked_list_results = operand1_results
+        return not_operation(operands[0], dictionary, pfile)
 
     if operator == 'AND':
-        return ll_a_and_list_b(linked_list_results, in_memory_results)
-    else:
-        return ll_a_or_list_b(linked_list_results, in_memory_results)
+        return and_operation(operands, dictionary, pfile)
+
+    if operator == 'OR':
+        return or_operation(operands, dictionary, pfile)
 
     return []
+
+
+def is_query(op):
+    return isinstance(op, parse_query.Query)
+
+
+def get_results(op, dictionary, pfile, force_list=False):
+    if is_query(op):
+        return execute_query(op, dictionary, pfile)
+    else:
+        entry_ptr = dictionary.get_head(op)
+        if force_list:
+            return pfile.get_doc_ids_from_pointer(entry_ptr)
+        else:
+            return pfile.get_entry(entry_ptr)
+
+
+def not_operation(operand, dictionary, pfile):
+    all_docs = dictionary.all_docs()
+    results = get_results(operand, dictionary, pfile, force_list=True)
+    return [doc for doc in all_docs if doc not in results]
+
+
+def and_operation(query_tuple, dictionary, pfile):
+    op_a = query_tuple[0]
+    op_b = query_tuple[1]
+
+    ll_a = not is_query(op_a)
+    ll_b = not is_query(op_b)
+
+    # Optimization for AND NOT operations.
+    op_a_is_not = not ll_a and op_a.operator == 'NOT'
+    op_b_is_not = not ll_b and op_b.operator == 'NOT'
+    if op_a_is_not or op_b_is_not:
+        if op_b_is_not:
+            a = get_results(op_a, dictionary, pfile, force_list=True)
+            sub_op_b = parse_query.Query(op_b.query_tuple[1:])
+            b = get_results(sub_op_b, dictionary, pfile, force_list=True)
+            return list_a_and_not_list_b(a, b)
+        else:
+            sub_op_a = parse_query.Query(op_a.query_tuple[1:])
+            a = get_results(sub_op_a, dictionary, pfile, force_list=True)
+            b = get_results(op_b, dictionary, pfile, force_list=True)
+            return list_a_and_not_list_b(b, a)
+
+    a = get_results(op_a, dictionary, pfile)
+    b = get_results(op_b, dictionary, pfile)
+
+    if ll_a and ll_b:
+        return ll_a_and_ll_b(a, b)
+    elif ll_a:
+        return ll_a_and_list_b(a, b)
+    elif ll_b:
+        return ll_a_and_list_b(b, a)
+    else:
+        return list_a_and_list_b(a, b)
+
+
+def or_operation(query_tuple, dictionary, pfile):
+    op_a = query_tuple[0]
+    op_b = query_tuple[1]
+
+    ll_a = not is_query(op_a)
+    ll_b = not is_query(op_b)
+
+    a = get_results(op_a, dictionary, pfile)
+    b = get_results(op_b, dictionary, pfile)
+
+    if ll_a and ll_b:
+        return ll_a_or_ll_b(a, b)
+    elif ll_a and not ll_b:
+        return ll_a_or_list_b(a, b)
+    elif ll_b and not ll_a:
+        return ll_a_or_list_b(b, a)
+    else:
+        return list_a_or_list_b(a, b)
