@@ -50,11 +50,10 @@ class Dictionary(object):
 
         return json.dumps(dict_repr)
 
-    @staticmethod
-    def from_json(json_repr):
+    @classmethod
+    def from_json(cls, json_repr):
         dict_repr = json.loads(json_repr)
-
-        d = Dictionary()
+        d = cls()
         d.doc_ids = dict_repr['doc_ids']
         for term, val in dict_repr['terms'].iteritems():
             d.terms[term].head = val['h']

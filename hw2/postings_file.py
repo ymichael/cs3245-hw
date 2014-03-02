@@ -155,9 +155,9 @@ class PostingsFileEntry(SkipListNode):
             self.skip_pointer == other.skip_pointer and \
             self.skip_doc_id == other.skip_doc_id
 
-    @staticmethod
-    def from_string(string):
-        assert len(string) == PostingsFileEntry.SIZE
+    @classmethod
+    def from_string(cls, string):
+        assert len(string) == cls.SIZE
 
         doc_id, next_pointer, skip_pointer, skip_doc_id = string[:-1].split(' ')
 
@@ -166,9 +166,5 @@ class PostingsFileEntry(SkipListNode):
         skip_pointer = int(skip_pointer)
         skip_doc_id = int(skip_doc_id)
 
-        return PostingsFileEntry(
-                doc_id,
-                next_pointer,
-                skip_pointer,
-                skip_doc_id)
+        return cls(doc_id, next_pointer, skip_pointer, skip_doc_id)
 

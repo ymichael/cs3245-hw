@@ -76,23 +76,23 @@ class ListNode(SkipListNode):
     def skip(self):
         return self._skip
 
-    @staticmethod
-    def from_list(lst):
+    @classmethod
+    def from_list(cls, lst):
         if len(lst) == 0:
             return None
         head_val = lst[0]
-        head = ListNode(head_val)
+        head = cls(head_val)
         current = head
         idx = 1
         while idx < len(lst):
-            next_node = ListNode(lst[idx])
+            next_node = cls(lst[idx])
             current.set_next(next_node)
             current = next_node
             idx += 1
         return head
 
-    @staticmethod
-    def to_list(head):
+    @classmethod
+    def to_list(cls, head):
         vals = []
         current = head
         while current:
