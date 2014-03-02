@@ -33,7 +33,9 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     output.write('%s\n' % ' '.join([str(x) for x in result]))
 
 
-@cache.cached_function(cache.single_arg_cache_key)
+@cache.cached_function(
+    cache_key_func=cache.single_arg_cache_key,
+    cache_size=1000)
 def execute_query(query, dictionary, pfile):
     query_tuple = query.query_tuple
     if len(query_tuple) == 1:

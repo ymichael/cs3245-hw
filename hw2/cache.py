@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 def generic_func_cache_key(*args, **kwargs):
     """Cache key generator that simply concaternates all the arguments to the
     function.
@@ -60,12 +62,42 @@ class CacheBox(object):
         return val
 
 
-# TODO(michael): Use and ordered dict to allow users to specify size of cache to
-# prevent cache from growing out of hand.
-def cached_function(cache_key_func=None):
+class LRUCacheBox(CacheBox):
+    """LRU version of the cachebox.
+
+    Defaults to maximum of 1000 keys.
+
+    """
+    def __init__(self, func, cache_key_func=None, cache_size=1000):
+        super(LRUCacheBox, self).__init__(func, cache_key_func)
+        self._cache = OrderedDict()
+        self.cache_size = cache_size
+
+    def current_size(self):
+        return len(self._cache)
+
+    def check_size(self):
+        # http://stackoverflow.com/questions/2437617/ \
+        # limiting-the-size-of-a-python-dictionary
+        while self.current_size() > self.cache_size:
+            self._cache.popitem(False)
+
+    def hard_get(self, *args, **kwargs):
+        val = super(LRUCacheBox, self).hard_get(*args, **kwargs)
+        self.check_size()
+        return val
+
+
+def cached_function(cache_key_func=None, cache_size=None):
     """Decorator used to turn a function into a cachebox."""
     def cache_decorator(func):
-        return CacheBox(func, cache_key_func=cache_key_func)
+        if cache_size is None:
+            return CacheBox(func, cache_key_func=cache_key_func)
+        else:
+            return LRUCacheBox(
+                func,
+                cache_key_func=cache_key_func,
+                cache_size=cache_size)
     return cache_decorator
 
 
@@ -79,6 +111,7 @@ def naive_class_method_cache(func):
         key = cache_key(args, kwargs)
         if key in __cache:
             return __cache[key]
+
         val = func(*args, **kwargs)
         __cache[key] = val
         return val
