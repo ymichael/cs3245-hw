@@ -2,7 +2,7 @@ import parse_query
 import cache
 from dictionary import Dictionary
 from build_index import process_word
-from postings_file import PostingsFile, PostingsFileEntry
+from postings_file import PostingsFile, PostingsFileEntry, SkipListNode
 from boolean_operations import *
 
 
@@ -81,12 +81,9 @@ def and_operation(query_tuple, dictionary, pfile):
     op_a = query_tuple[0]
     op_b = query_tuple[1]
 
-    ll_a = not is_query(op_a)
-    ll_b = not is_query(op_b)
-
     # Optimization for AND NOT operations.
-    op_a_is_not = not ll_a and op_a.operator == 'NOT'
-    op_b_is_not = not ll_b and op_b.operator == 'NOT'
+    op_a_is_not = is_query(op_a) and op_a.operator == 'NOT'
+    op_b_is_not = is_query(op_b) and op_b.operator == 'NOT'
     if op_a_is_not or op_b_is_not:
         if op_b_is_not:
             a = get_results(op_a, dictionary, pfile, force_list=True)
@@ -102,6 +99,9 @@ def and_operation(query_tuple, dictionary, pfile):
     a = get_results(op_a, dictionary, pfile)
     b = get_results(op_b, dictionary, pfile)
 
+    ll_a = a == None or isinstance(a, SkipListNode)
+    ll_b = b == None or isinstance(b, SkipListNode)
+
     if ll_a and ll_b:
         return ll_a_and_ll_b(a, b)
     elif ll_a:
@@ -116,11 +116,11 @@ def or_operation(query_tuple, dictionary, pfile):
     op_a = query_tuple[0]
     op_b = query_tuple[1]
 
-    ll_a = not is_query(op_a)
-    ll_b = not is_query(op_b)
-
     a = get_results(op_a, dictionary, pfile)
     b = get_results(op_b, dictionary, pfile)
+
+    ll_a = a == None or isinstance(a, SkipListNode)
+    ll_b = b == None or isinstance(b, SkipListNode)
 
     if ll_a and ll_b:
         return ll_a_or_ll_b(a, b)
