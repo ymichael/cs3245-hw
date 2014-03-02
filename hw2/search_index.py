@@ -33,7 +33,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     output.write('%s\n' % ' '.join([str(x) for x in result]))
 
 
-@cache.cached_function(1)
+@cache.cached_function(cache.single_arg_cache_key)
 def execute_query(query, dictionary, pfile):
     query_tuple = query.query_tuple
     if len(query_tuple) == 1:
@@ -63,10 +63,10 @@ def is_query(op):
 def get_results(op, dictionary, pfile, force_list=False):
     if is_query(op):
         return execute_query(op, dictionary, pfile)
-    elif force_list:
-        return execute_query(parse_query.Query((op,)), dictionary, pfile)
     else:
-        # TODO(michael): Reuse previously cached values if exists
+        query = parse_query.Query((op,))
+        if execute_query.is_cached(query, dictionary, pfile) or force_list:
+            return execute_query(query, dictionary, pfile)
         entry_ptr = dictionary.get_head(op)
         return pfile.get_entry(entry_ptr)
 

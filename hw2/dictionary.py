@@ -1,5 +1,6 @@
 import collections
 import json
+import cache
 
 
 class Dictionary(object):
@@ -28,6 +29,7 @@ class Dictionary(object):
     def all_terms(self):
         return self.terms.keys()
 
+    @cache.naive_class_method_cache
     def all_docs(self):
         return sorted(self.doc_ids)
 

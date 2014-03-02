@@ -1,3 +1,9 @@
+# Poor man's patching.
+# NOTE(michael): Done before importing dictionary because it uses cache module
+# which we're trying to override.
+import cache
+cache.naive_class_method_cache = lambda x: x
+
 from dictionary import Dictionary
 from nose.tools import eq_ as assert_eq
 
