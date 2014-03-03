@@ -1,4 +1,9 @@
-from collections import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    # Python 2.6 and lower
+    from ordered_dict import OrderedDict
+
 
 def generic_func_cache_key(*args, **kwargs):
     """Cache key generator that simply concaternates all the arguments to the
