@@ -17,12 +17,15 @@ This is the README file for A0082877M's submission
 	- `boolean_operations.py`
 	- `parse_query.py`
 	- `cache.py`
+	- `ordered_dict.py`
+        - Polyfill for collections.OrderedDict (Present in 2.7 but not 2.6)
 - Unit tests
 	- `test_postings_file.py`
-	- `test_cache.py`
 	- `test_boolean_operations.py`
 	- `test_dictionary.py`
 	- `test_parse_query.py`
+	- `test_cache.py`
+	- `test_ordered_dict.py`
 - Generated files
 	- `dictionary.txt`
 	- `postings.txt`
