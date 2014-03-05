@@ -2,7 +2,9 @@ def list_a_and_not_list_b(a, b):
     results = []
     idx_a = 0
     idx_b = 0
-    while idx_a < len(a) and idx_b < len(b):
+    len_a = len(a)
+    len_b = len(b)
+    while idx_a < len_a and idx_b < len_b:
         if a[idx_a] < b[idx_b]:
             results.append(a[idx_a])
             idx_a += 1
@@ -12,10 +14,7 @@ def list_a_and_not_list_b(a, b):
             idx_a += 1
             idx_b += 1
 
-    while idx_a < len(a):
-        results.append(a[idx_a])
-        idx_a += 1
-
+    results.extend(a[idx_a:])
     return results
 
 
@@ -23,7 +22,9 @@ def list_a_and_list_b(a, b):
     results = []
     idx_a = 0
     idx_b = 0
-    while idx_a < len(a) and idx_b < len(b):
+    len_a = len(a)
+    len_b = len(b)
+    while idx_a < len_a and idx_b < len_b:
         if a[idx_a] == b[idx_b]:
             results.append(a[idx_a])
             idx_a += 1
@@ -39,7 +40,9 @@ def list_a_or_list_b(a, b):
     results = []
     idx_a = 0
     idx_b = 0
-    while idx_a < len(a) and idx_b < len(b):
+    len_a = len(a)
+    len_b = len(b)
+    while idx_a < len_a and idx_b < len_b:
         if a[idx_a] == b[idx_b]:
             results.append(a[idx_a])
             idx_a += 1
@@ -51,14 +54,8 @@ def list_a_or_list_b(a, b):
             results.append(b[idx_b])
             idx_b += 1
 
-    while idx_a < len(a):
-        results.append(a[idx_a])
-        idx_a += 1
-
-    while idx_b < len(b):
-        results.append(b[idx_b])
-        idx_b += 1
-
+    results.extend(a[idx_a:])
+    results.extend(b[idx_b:])
     return results
 
 
@@ -114,7 +111,8 @@ def ll_a_or_ll_b(a, b):
 def ll_a_and_list_b(a, b):
     results = []
     idx_b = 0
-    while a and idx_b < len(b):
+    len_b = len(b)
+    while a and idx_b < len_b:
         if a.val() == b[idx_b]:
             results.append(a.val())
             a = a.next()
@@ -134,7 +132,8 @@ def ll_a_and_list_b(a, b):
 def ll_a_or_list_b(a, b):
     results = []
     idx_b = 0
-    while a and idx_b < len(b):
+    len_b = len(b)
+    while a and idx_b < len_b:
         if a.val() == b[idx_b]:
             results.append(a.val())
             a = a.next()
@@ -150,8 +149,5 @@ def ll_a_or_list_b(a, b):
         results.append(a.val())
         a = a.next()
 
-    while idx_b < len(b):
-        results.append(b[idx_b])
-        idx_b += 1
-
+    results.extend(b[idx_b:])
     return results
