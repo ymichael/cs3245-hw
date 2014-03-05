@@ -76,7 +76,7 @@ def get_results(op, dictionary, pfile, force_list=False):
 def not_operation(operand, dictionary, pfile):
     all_docs = dictionary.all_docs()
     results = get_results(operand, dictionary, pfile, force_list=True)
-    return [doc for doc in all_docs if doc not in results]
+    return list_a_and_not_list_b(all_docs, results)
 
 
 def and_operation(query_tuple, dictionary, pfile):
