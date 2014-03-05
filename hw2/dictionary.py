@@ -6,6 +6,12 @@ import cache
 class Dictionary(object):
     def __init__(self):
         self.doc_ids = set()
+
+        # NOTE(michael): We use 4 separate dictionaries here to trade
+        # performance for some code cleanliness. (Using a class here would
+        # create an overhead of the order of 30K python objects. Instead, the
+        # tradeoff here is balanced by unit tests found in test_dictionary.py.
+        # Speedup here is significant as profiled by cProfiler.
         self.term_to_head_ptr = {}
         self.term_to_tail_ptr = {}
         self.term_to_frequency = {}
