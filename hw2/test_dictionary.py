@@ -17,6 +17,22 @@ def test_dictionary_has_entry():
     assert not d.has_entry('qwer', 1)
 
 
+def test_dictionary_add_term_pointers():
+    d = Dictionary()
+
+    first_pointer = 0
+    d.add_term('asdf', 1, first_pointer)
+    assert_eq(1, d.get_frequency('asdf'))
+    assert_eq(first_pointer, d.get_head('asdf'))
+    assert_eq(first_pointer, d.get_tail('asdf'))
+
+    second_pointer = 10
+    d.add_term('asdf', 2, second_pointer)
+    assert_eq(2, d.get_frequency('asdf'))
+    assert_eq(first_pointer, d.get_head('asdf'))
+    assert_eq(second_pointer, d.get_tail('asdf'))
+
+
 def test_dictionary_add_term():
     d = Dictionary()
 

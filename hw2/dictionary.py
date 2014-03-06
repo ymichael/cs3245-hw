@@ -25,7 +25,7 @@ class Dictionary(object):
         return sorted(self.doc_ids)
 
     def has_entry(self, term, doc_id):
-        return doc_id in self.term_to_doc_ids.get(term, [])
+        return doc_id in self.term_to_doc_ids[term]
 
     def add_term(self, term, doc_id, pointer):
         if doc_id not in self.doc_ids:
@@ -34,14 +34,14 @@ class Dictionary(object):
         if not self.has_entry(term, doc_id):
             self.term_to_doc_ids[term].add(doc_id)
 
-            if not self.term_to_head_ptr.get(term):
+            if self.term_to_head_ptr.get(term) is None:
                 self.term_to_head_ptr[term] = pointer
 
             self.term_to_tail_ptr[term] = pointer
 
     def get_frequency(self, term):
         freq = self.term_to_frequency.get(term)
-        if freq:
+        if freq is not None:
             return freq
         return len(self.term_to_doc_ids[term])
 
