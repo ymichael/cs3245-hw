@@ -2,6 +2,41 @@
 
 1. You will observe that a large portion of the terms in the dictionary are numbers. However, we normally do not use numbers as query terms to search. Do you think it is a good idea to remove these number entries from the dictionary and the postings lists? Can you propose methods to normalize these numbers? How many percentage of reduction in disk storage do you observe after removing/normalizing these numbers?
 
+Yes. I think its a good idea. I think that numbers should be kept in a separate index altogether since it seems like searches containing numbers are rare and the performance gain and process overhead makes sense anyway.
+
+I made the following changes to my process_tokens function
+
+```
+for sentence in tokens:
+    for token in sentence:
+        has_number = False
+        for i in xrange(10):
+            if str(i) in token:
+                has_number = True
+                break
+
+        if not has_number:
+            terms.add(process_word(token))
+
+return list(terms)
+```
+
+This, to see the impact of removing numbers from my dictionary. The effect is that my postings file shrank from 25M to 22M and my dictionary.txt shrank from 1.7M to 1M. This is amost half the space (1.7 vs 1) I'd have to keep in memory.
+
 2. What do you think will happen if we remove stop words from the dictionary and postings file? How does it affect the searching phase?
 
+For boolean queries, the effect might be less than say, phrasal queries.
+
+For boolean queries, we'll no longer be able to process queries with stopwords or at least the results would be ambigious (eg. bill AND gates AND and, bill AND gates OR and) Its not clear how we should consider the last term in the query. All docs? Some docs? Ignore? On the plus side, performance might improve since we now use a lot less space in our postings file (indexing is faster). We don't save all that much space in our dictionary.
+
+For phrasal queries, removing stop words reduce our ability to match exact phrases.
+
+Overall, removing stopwords might affect both the precision and recall of searching.
+
 3. The NLTK tokenizer may not correctly tokenize all terms. What do you observe from the resulting terms produced by sent_tokenize() and word_tokenize()? Can you propose rules to further refine these results?
+
+I tweaked my process line function to print out the before and after lines/tokens and sent_tokenize seems to be doing an okay job. I didn't notice anything obviously wrong with it. (It was doing `Mr.` and other terms with periods in them properly).
+
+For word_tokenize, its seems to be doing a very naive split on whitespace. In most cases, this is fine. Some words lose their meaning when broken up by whitespace (eg. 5.5 mil) One thing we could do here is to have a special rule for numbers and the words that come before then and/or after them.
+
+Dates are another thing that obvious won't work with this naive approach. They are also pretty low hanging refinement and can be normalised quite easily (only one plane: time).
