@@ -1,6 +1,7 @@
 from nose.tools import eq_ as assert_eq
 from boolean_operations import *
 from postings_file import *
+from skip_list_node import SkipListNode
 
 
 def test_list_a_and_not_list_b():

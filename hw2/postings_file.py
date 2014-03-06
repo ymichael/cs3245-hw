@@ -1,3 +1,5 @@
+from skip_list_node import SkipListNode
+
 class PostingsFile(object):
     def __init__(self, filename, mode):
         self.filename = filename
@@ -77,20 +79,6 @@ class PostingsFile(object):
 
         self.f.seek(write_location)
         self.f.write(postings_entry.to_string())
-
-
-class SkipListNode(object):
-    def val(self):
-        raise NotImplementedError()
-
-    def skip_val(self):
-        raise NotImplementedError()
-
-    def next(self):
-        raise NotImplementedError()
-
-    def skip(self):
-        raise NotImplementedError()
 
 
 class PostingsFileEntry(SkipListNode):
