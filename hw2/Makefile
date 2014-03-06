@@ -6,6 +6,10 @@ search:
 	python search.py -d dictionary.txt -p postings.txt \
 		-q queries/queries_basic.txt -o output.txt
 
+search2:
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries.txt -o out/output.txt
+
 profile_simple:
 	python -m cProfile -o prof/simple.prof \
 		search.py -d dictionary.txt -p postings.txt \

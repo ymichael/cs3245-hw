@@ -18,6 +18,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                 for query in qfile:
                     # Strip newline character.
                     query = query.replace('\n', '')
+                    query = query.replace('\r', '')
                     prefix_notation = parse_query.infix_to_prefix(query)
 
                     # Process all words in the query here.
