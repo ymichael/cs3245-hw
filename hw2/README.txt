@@ -90,7 +90,11 @@ The recursive approach traded simplcity for a performance overhead that was miti
 	- `postings.txt`
 - Other files
 	- `Makefile`
+        - Targets to make my life easier
+        - `index`
+        - `search`
 	- `Queries/`
+        - Some of the queries I tested against
 
 == Statement of individual work ==
 
