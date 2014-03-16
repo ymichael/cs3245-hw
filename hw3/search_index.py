@@ -5,6 +5,7 @@ import math
 import heapq
 import collections
 import operator
+import cache
 
 LOG_BASE = 10
 
@@ -47,9 +48,14 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     normalized_doc_vectors = []
                     for doc_vector, doc_id in doc_vectors:
                         normalized_doc_vectors.append(
-                            (sum(map(operator.mul, doc_vector, query_vector)), doc_id))
+                            (-1 * sum(map(operator.mul, doc_vector, query_vector)), doc_id))
 
-                    print normalized_doc_vectors
+                    result = []
+                    heapq.heapify(normalized_doc_vectors)
+                    while normalized_doc_vectors and len(result) < 10:
+                        result.append(heapq.heappop(normalized_doc_vectors))
+
+                    print result
 
 def process_query(query):
     return [process_word(token) for token in query.split(' ')]
@@ -61,7 +67,9 @@ def execute_query(query_terms, dictionary, postings_file, k=10):
         term_ptr = dictionary.get_head(term)
         entry = postings_file.get_entry(term_ptr)
         if entry is not None:
-            heapq.heappush(postings, (entry, term))
+            postings.append((entry, term))
+
+    heapq.heapify(postings)
 
     doc_vectors = []
     while postings:
@@ -84,7 +92,7 @@ def execute_query(query_terms, dictionary, postings_file, k=10):
                 tf = 1 + math.log(freq, LOG_BASE)
             doc_vector.append(tf * idf(term, dictionary))
 
-        doc_vectors.append((doc_vector, current_doc_id))
+        doc_vectors.append((unit_vector(doc_vector), current_doc_id))
 
     return doc_vectors
 
@@ -99,9 +107,12 @@ def pop_and_maybe_replace(heap):
 
 def unit_vector(vector):
     length = math.sqrt(sum([x**2 for x in vector]))
+    if length == 0:
+        return vector
     return [x/length for x in vector]
 
 
+@cache.cached_function(cache_key_func=cache.single_arg_cache_key)
 def idf(term, dictionary):
     # df is the document frequency of t
     # (the number of documents that contain t).
