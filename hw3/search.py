@@ -26,7 +26,7 @@ Options:
   -p        Path to save postings file.
   -q        Path to file containing queries
   -o        Path to output query results
-  -time     Timing mode (to measure performance)     
+  -time     Timing mode (to measure performance)
 """
 
 
