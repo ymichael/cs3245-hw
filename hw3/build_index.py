@@ -20,7 +20,7 @@ def build(training_dir, dict_file, postings_file):
 
     # Two loops here to have control over the size of the loop.
     # NOTE(michael): for testing.
-    filepaths = filepaths[:10]
+    # filepaths = filepaths[:10]
 
     with PostingsFile(postings_file, mode='w+',
             entry_cls=PostingsFileEntryWithFrequencies) as postings_file:
