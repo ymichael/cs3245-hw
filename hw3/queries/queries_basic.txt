@@ -1,3 +1,4 @@
 This is a query
+query This is a
 bill gates
 Hello world

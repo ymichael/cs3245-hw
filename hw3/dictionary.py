@@ -21,6 +21,9 @@ class Dictionary(object):
         self.term_to_doc_ids = collections.defaultdict(set)
 
     @cache.naive_class_method_cache
+    def number_of_docs(self):
+        return len(self.all_docs())
+
     def all_docs(self):
         return sorted(self.doc_ids)
 

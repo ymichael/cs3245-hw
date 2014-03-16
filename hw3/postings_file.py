@@ -63,6 +63,16 @@ class PostingsFileEntry(SkipListNode):
             self.skip_pointer == other.skip_pointer and \
             self.skip_doc_id == other.skip_doc_id
 
+    def __lt__(self, other):
+        if not isinstance(other, PostingsFileEntry):
+            return False
+        return self.doc_id < other.doc_id
+
+    def __gt__(self, other):
+        if not isinstance(other, PostingsFileEntry):
+            return False
+        return self.doc_id > other.doc_id
+
     @classmethod
     def from_string(cls, string):
         assert len(string) == cls.SIZE
@@ -95,6 +105,9 @@ class PostingsFileEntryWithFrequencies(PostingsFileEntry):
             skip_doc_id=skip_doc_id)
         self.term_freq = term_freq
 
+    def val(self):
+        return (self.doc_id, self.term_freq)
+
     @classmethod
     def from_string(cls, string):
         assert len(string) == cls.SIZE
@@ -119,7 +132,7 @@ class PostingsFileEntryWithFrequencies(PostingsFileEntry):
             self.skip_doc_id)
 
     def __repr__(self):
-        return 'Entry(%d)' % self.doc_id
+        return 'Entry(%d, %d)' % (self.doc_id, self.term_freq)
 
 
 class PostingsFile(object):
