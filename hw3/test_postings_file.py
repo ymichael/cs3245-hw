@@ -30,9 +30,9 @@ def test_postings_file_write_entry():
     filename = 'test'
     with PostingsFile(filename, 'w+') as pfile:
         assert_eq(0, pfile.pointer)
-        pfile.write_entry(1)
-        pfile.write_entry(2)
-        pfile.write_entry(3)
+        pfile.write_entry(PostingsFileEntry(1))
+        pfile.write_entry(PostingsFileEntry(2))
+        pfile.write_entry(PostingsFileEntry(3))
 
         assert_eq(
             PostingsFileEntry(1).to_string(),
@@ -54,23 +54,70 @@ def test_postings_file_write_entry_overwrite():
     with PostingsFile(filename, 'w+') as pfile:
         assert_eq(0, pfile.pointer)
         write_location = 0
-        pfile.write_entry(1, write_location=write_location)
+
+        entry = PostingsFileEntry(1)
+        entry.own_pointer = write_location
+
+        pfile.write_entry(entry)
 
         assert_eq(
             PostingsFileEntry(1).to_string(),
             pfile.read_entry(write_location))
 
-        pfile.write_entry(1, 2, write_location=write_location)
+        entry.next_pointer = 2
+        pfile.write_entry(entry)
 
         assert_eq(
             PostingsFileEntry(1, 2).to_string(),
             pfile.read_entry(write_location))
 
-        pfile.write_entry(1, 2, 3, write_location=write_location)
+        entry.skip_pointer = 3
+        pfile.write_entry(entry)
 
         assert_eq(
             PostingsFileEntry(1, 2, 3).to_string(),
             pfile.read_entry(write_location))
+
+    os.remove(filename)
+
+def test_postings_file_write_entry_out_of_order():
+    filename = 'test'
+    with PostingsFile(filename, 'w+') as pfile:
+        first_write_location = pfile.pointer
+        first_entry = PostingsFileEntry(1)
+        first_entry.own_pointer = first_write_location
+
+        pfile.write_entry(first_entry)
+
+        assert_eq(
+            PostingsFileEntry(1).to_string(),
+            pfile.read_entry(first_write_location))
+
+        second_write_location = pfile.pointer
+        second_entry = PostingsFileEntry(2)
+        second_entry.own_pointer = second_write_location
+        pfile.write_entry(second_entry)
+
+        assert_eq(
+            PostingsFileEntry(2).to_string(),
+            pfile.read_entry(second_write_location))
+
+        # Update first entry
+        first_entry.doc_id = 4
+        pfile.write_entry(first_entry)
+
+        assert_eq(
+            first_entry.to_string(),
+            pfile.read_entry(first_write_location))
+
+        # Add third entry
+        third_entry = PostingsFileEntry(3)
+        pfile.write_entry(third_entry)
+
+        # Check that second write location was not overwritten.
+        assert_eq(
+            PostingsFileEntry(2).to_string(),
+            pfile.read_entry(second_write_location))
 
     os.remove(filename)
 
@@ -79,13 +126,13 @@ def test_postings_file_get_entry():
     filename = 'test'
     with PostingsFile(filename, 'w+') as pfile:
         head = pfile.pointer
-        pfile.write_entry(1)
+        pfile.write_entry(PostingsFileEntry(1))
 
         # Test that we set the entries own pointer.
         assert_eq(head, pfile.get_entry(head).own_pointer)
 
         ptr = pfile.pointer
-        pfile.write_entry(2)
+        pfile.write_entry(PostingsFileEntry(2))
         assert_eq(ptr, pfile.get_entry(ptr).own_pointer)
 
     os.remove(filename)
@@ -96,13 +143,16 @@ def test_postings_file_get_entry_from_pointer():
     with PostingsFile(filename, 'w+') as pfile:
         head = pfile.pointer
         prev_ptr = head
-        pfile.write_entry(1)
 
-        for i in xrange(10):
-            next_ptr = pfile.pointer
-            pfile.write_entry(i + 1, next_ptr, write_location=prev_ptr)
-            pfile.write_entry(i + 2, write_location=next_ptr)
-            prev_ptr = next_ptr
+        last = 12
+        for i in xrange(1, last):
+            current_entry = PostingsFileEntry(i)
+            current_entry.own_pointer = pfile.pointer
+            pfile.write_entry(current_entry)
+
+            if i != last - 1:
+                current_entry.next_pointer = pfile.pointer
+                pfile.write_entry(current_entry)
 
         entries = pfile.get_entry_list_from_pointer(head)
         entries = [entry.doc_id for entry in entries]

@@ -1,7 +1,7 @@
 import os
 import math
 from dictionary import Dictionary
-from postings_file import PostingsFile, PostingsFileEntry
+from postings_file import PostingsFile, PostingsFileEntryWithFrequencies
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import PorterStemmer
 
@@ -20,31 +20,40 @@ def build(training_dir, dict_file, postings_file):
 
     # Two loops here to have control over the size of the loop.
     # NOTE(michael): for testing.
-    # filepaths = filepaths[:10]
+    filepaths = filepaths[:10]
 
-    with PostingsFile(postings_file, mode='w+') as postings_file:
+    with PostingsFile(postings_file, mode='w+',
+            entry_cls=PostingsFileEntryWithFrequencies) as postings_file:
         for filepath in filepaths:
             terms = process_file(filepath)
             # TODO(michael): Making assumption that document is an int.
             doc_id = int(os.path.basename(filepath))
 
             for term in terms:
+                # Create postings file entry if entry does not exist.
                 if not dictionary.has_entry(term, doc_id):
-                    current_node_location = postings_file.pointer
-
                     if dictionary.get_frequency(term) != 0:
                         # Update previous node in the linked list.
                         previous_node_location = dictionary.get_tail(term)
                         previous_entry = \
                             postings_file.get_entry(previous_node_location)
-                        postings_file.write_entry(
-                            previous_entry.doc_id,
-                            current_node_location,
-                            write_location=previous_node_location)
+                        previous_entry.next_pointer = postings_file.pointer
+                        postings_file.write_entry(previous_entry)
 
-                    dictionary.add_term(term, doc_id, current_node_location)
-                    postings_file.write_entry(
-                        doc_id, write_location=current_node_location)
+                    dictionary.add_term(term, doc_id, postings_file.pointer)
+                    new_entry = PostingsFileEntryWithFrequencies(doc_id)
+                    postings_file.write_entry(new_entry)
+
+                # Update postings file entry term frequency.
+                # NOTE(michael): We can safely use the tail pointer since we
+                # process documents in order and not at random.
+                current_term_location = dictionary.get_tail(term)
+                current_term_entry = \
+                    postings_file.get_entry(current_term_location)
+
+                current_term_entry.term_freq += 1
+                postings_file.write_entry(current_term_entry)
+
 
         # Skip pointers
         for term in dictionary.all_terms():
@@ -70,12 +79,10 @@ def build(training_dir, dict_file, postings_file):
                     skip_to_entry = entries[skip_to]
 
                     # Add skip pointer.
-                    postings_file.write_entry(
-                        current_entry.doc_id,
-                        current_entry.next_pointer,
-                        skip_to_entry.own_pointer,
-                        skip_to_entry.doc_id,
-                        write_location=current_entry.own_pointer)
+                    current_entry.skip_pointer = skip_to_entry.own_pointer
+                    current_entry.skip_doc_id = skip_to_entry.doc_id
+
+                    postings_file.write_entry(current_entry)
 
     # Write dictionary to file.
     with open(dict_file, 'w') as dictionary_file:
