@@ -59,10 +59,15 @@ def dot_product(v1, v2):
     return sum(x1 * x2 for x1, x2 in zip(v1, v2))
 
 
-def execute_query(query_terms, dictionary, postings_file, k=10):
+def execute_query(query_terms, dictionary, postings_file):
     postings = []
     for term in query_terms:
         term_ptr = dictionary.get_head(term)
+
+        # Ignore terms with idf == 0.
+        if idf(term, dictionary) == 0:
+            continue
+
         entry = postings_file.get_entry(term_ptr)
         if entry is not None:
             postings.append((entry, term))
