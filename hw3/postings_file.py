@@ -2,6 +2,10 @@ from skip_list_node import SkipListNode
 
 
 class PostingsFileEntry(SkipListNode):
+    """Generic Postings File Entry.
+
+    Encodes doc_id, next_pointer, skip_pointer, skip_doc_id.
+    """
     FORMAT = "%010d %010d %010d %010d\n"
     SIZE = (10 * 4) + 4
 
@@ -88,6 +92,7 @@ class PostingsFileEntry(SkipListNode):
 
 
 class PostingsFileEntryWithFrequencies(PostingsFileEntry):
+    """Postings File Entry with additional Term Frequencies."""
     FORMAT = "%010d %010d %010d %010d %010d\n"
     SIZE = (10 * 5) + 5
 
