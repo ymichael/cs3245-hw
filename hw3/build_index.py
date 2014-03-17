@@ -62,9 +62,7 @@ def process_file(filepath):
     """Reads file and returns a list of terms."""
     terms = []
     with open(filepath) as f:
-        for line in f:
-            tokens = process_line(line)
-            terms.extend(process_tokens(tokens))
+        terms = process_tokens(process_line(f.read()))
     return terms
 
 
@@ -82,15 +80,15 @@ def process_tokens(tokens):
 
     Takes in an list of list.
     """
-    terms = set()
+    terms = []
     for sentence in tokens:
         for token in sentence:
-            terms.add(process_word(token))
+            terms.append(process_word(token))
 
     return list(terms)
 
 
 def process_word(token):
-    token = stemmer.stem(token) # Stemming
     token = token.lower() # Case-folding
+    token = stemmer.stem(token) # Stemming
     return token
