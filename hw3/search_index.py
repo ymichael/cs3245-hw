@@ -25,20 +25,11 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     query = query.strip()
 
                     # Process all words in the query here.
-                    query_terms = process_query(query)
+                    query_tokens = process_query(query)
+                    query_tf = collections.Counter(query_tokens)
+                    query_terms = sorted(set(query_tokens))
 
-                    # Calculate query score.
-                    query_dict = collections.defaultdict(lambda:0)
-                    for term in query_terms:
-                        query_dict[term] += 1
-
-                    query_terms = sorted(set(query_terms))
-
-                    query_vector = []
-                    for term in query_terms:
-                        tf = 1 + math.log(query_dict[term], LOG_BASE)
-                        query_vector.append(tf)
-
+                    query_vector = [logtf(query_tf[term]) for term in query_terms]
                     query_vector = unit_vector(query_vector)
 
                     # Process all words in the query here.
@@ -92,12 +83,10 @@ def execute_query(query_terms, dictionary, postings_file, k=10):
 
         doc_vector = []
         for term in query_terms:
-            freq = freq_dict.get(term, 0)
-            if freq == 0:
-                tf = 0
-            else:
-                tf = 1 + math.log(freq, LOG_BASE)
-            doc_vector.append(tf * idf(term, dictionary))
+            tf = freq_dict.get(term, 0)
+            tfidf = logtf(tf) * idf(term, dictionary)
+            doc_vector.append(tfidf)
+
         doc_vectors.append((unit_vector(doc_vector), current_doc_id))
 
     return doc_vectors
@@ -114,6 +103,12 @@ def pop_and_maybe_replace(heap):
 def unit_vector(vector):
     length = math.sqrt(sum(x * x for x in vector))
     return [float(x)/length for x in vector]
+
+
+def logtf(term_frequency):
+    if term_frequency == 0:
+        return 0
+    return 1 + math.log(term_frequency, LOG_BASE)
 
 
 @cache.cached_function(cache_key_func=cache.single_arg_cache_key)
