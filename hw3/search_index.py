@@ -37,7 +37,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     query_vector = []
                     for term in query_terms:
                         tf = 1 + math.log(query_dict[term], LOG_BASE)
-                        query_vector.append(tf * idf(term, dictionary))
+                        query_vector.append(tf)
 
                     query_vector = unit_vector(query_vector)
 
@@ -47,18 +47,25 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     # Dot.product
                     normalized_doc_vectors = []
                     for doc_vector, doc_id in doc_vectors:
-                        normalized_doc_vectors.append(
-                            (-1 * sum(map(operator.mul, doc_vector, query_vector)), doc_id))
+                        score = dot_product(doc_vector, query_vector)
+                        normalized_doc_vectors.append((-1 * score, doc_id))
 
                     result = []
                     heapq.heapify(normalized_doc_vectors)
                     while normalized_doc_vectors and len(result) < 10:
                         result.append(heapq.heappop(normalized_doc_vectors))
 
-                    print result
+                    # Write doc_ids to output file.
+                    doc_ids = [str(elem[-1]) for elem in result]
+                    output.write('%s\n' % ' '.join(doc_ids))
+
 
 def process_query(query):
     return [process_word(token) for token in query.split(' ')]
+
+
+def dot_product(v1, v2):
+    return sum(x1 * x2 for x1, x2 in zip(v1, v2))
 
 
 def execute_query(query_terms, dictionary, postings_file, k=10):
@@ -76,7 +83,7 @@ def execute_query(query_terms, dictionary, postings_file, k=10):
         current_doc_postings = []
         current_doc_postings.append(pop_and_maybe_replace(postings))
         current_doc_id = current_doc_postings[0][0].doc_id
-        while postings and postings[0][0].doc_id == entry.doc_id:
+        while postings and postings[0][0].doc_id == current_doc_id:
             current_doc_postings.append(pop_and_maybe_replace(postings))
 
         freq_dict = {}
@@ -91,7 +98,6 @@ def execute_query(query_terms, dictionary, postings_file, k=10):
             else:
                 tf = 1 + math.log(freq, LOG_BASE)
             doc_vector.append(tf * idf(term, dictionary))
-
         doc_vectors.append((unit_vector(doc_vector), current_doc_id))
 
     return doc_vectors
@@ -106,10 +112,8 @@ def pop_and_maybe_replace(heap):
 
 
 def unit_vector(vector):
-    length = math.sqrt(sum([x**2 for x in vector]))
-    if length == 0:
-        return vector
-    return [x/length for x in vector]
+    length = math.sqrt(sum(x * x for x in vector))
+    return [float(x)/length for x in vector]
 
 
 @cache.cached_function(cache_key_func=cache.single_arg_cache_key)
@@ -120,4 +124,4 @@ def idf(term, dictionary):
     n = dictionary.number_of_docs()
     if df == 0:
         return 0
-    return math.log(n / df, LOG_BASE)
+    return math.log(float(n)/df, LOG_BASE)
