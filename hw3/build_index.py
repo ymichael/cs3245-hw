@@ -25,10 +25,9 @@ def build(training_dir, dict_file, postings_file):
     with PostingsFile(postings_file, mode='w+',
             entry_cls=PostingsFileEntryWithFrequencies) as postings_file:
         for filepath in filepaths:
-            terms = process_file(filepath)
             # TODO(michael): Making assumption that document is an int.
             doc_id = int(os.path.basename(filepath))
-
+            terms = process_file(filepath)
             for term in terms:
                 # Create postings file entry if entry does not exist.
                 if not dictionary.has_entry(term, doc_id):
@@ -53,36 +52,6 @@ def build(training_dir, dict_file, postings_file):
 
                 current_term_entry.term_freq += 1
                 postings_file.write_entry(current_term_entry)
-
-
-        # Skip pointers
-        for term in dictionary.all_terms():
-            term_frequency = dictionary.get_frequency(term)
-            skip_pointer_frequency = int(math.sqrt(term_frequency))
-
-            # Don't bother if too low.
-            if skip_pointer_frequency < SKIP_POINTER_THRESHOLD:
-                continue
-
-            head = dictionary.get_head(term)
-            entries = postings_file.get_entry_list_from_pointer(head)
-
-            for idx in xrange(term_frequency):
-                if idx % skip_pointer_frequency == 0:
-                    skip_to = idx + skip_pointer_frequency
-
-                    # Nothing to point to.
-                    if skip_to >= term_frequency:
-                        continue
-
-                    current_entry = entries[idx]
-                    skip_to_entry = entries[skip_to]
-
-                    # Add skip pointer.
-                    current_entry.skip_pointer = skip_to_entry.own_pointer
-                    current_entry.skip_doc_id = skip_to_entry.doc_id
-
-                    postings_file.write_entry(current_entry)
 
     # Write dictionary to file.
     with open(dict_file, 'w') as dictionary_file:
