@@ -131,6 +131,9 @@ class PostingsFileEntryWithFrequencies(PostingsFileEntry):
             self.skip_pointer or 0,
             self.skip_doc_id)
 
+    def __str__(self):
+        return 'Entry(%d, %d)' % (self.doc_id, self.term_freq)
+
     def __repr__(self):
         return 'Entry(%d, %d)' % (self.doc_id, self.term_freq)
 
