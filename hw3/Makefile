@@ -6,6 +6,10 @@ search:
 	python search.py -d dictionary.txt -p postings.txt \
 		-q queries/queries_basic.txt -o output.txt
 
+search2:
+	python search.py -d dictionary.txt -p postings.txt \
+		-q queries/queries_test.txt -o output.txt
+
 time:
 	python search.py -d dictionary.txt -p postings.txt \
 		-q queries/queries_basic.txt -o output.txt -time
