@@ -36,21 +36,35 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     query_terms = sorted(set(query_tokens))
 
                     # Calculate query vector
-                    query_vector = [logtf(query_tf[term]) for term in query_terms]
+                    query_vector = \
+                        [logtf(query_tf[term]) for term in query_terms]
                     query_vector = unit_vector(query_vector)
 
                     # Execute query
-                    result = execute_query(
+                    results = execute_query(
                         query_terms, query_vector, dictionary, pfile)
 
                     # Write doc_ids to output file.
-                    doc_ids = [str(elem[-1]) for elem in result]
-                    output.write('%s\n' % ' '.join(doc_ids))
+                    results = [str(x) for x in results]
+                    output.write('%s\n' % ' '.join(results))
+
+
+def trivial_query(query_term, dictionary, postings_file):
+    term_ptr = dictionary.get_head(query_term)
+    entry = postings_file.get_entry(term_ptr)
+    results = []
+    while len(results) < NUM_RESULTS and entry:
+        doc_id = entry.val()[0]
+        entry = entry.next()
+        results.append(doc_id)
+    return results
 
 
 def execute_query(query_terms, query_vector, dictionary, postings_file):
+    idfs = {}
     postings = []
     for term in query_terms:
+        idfs[term] = idf(term, dictionary)
         term_ptr = dictionary.get_head(term)
         entry = postings_file.get_entry(term_ptr)
         if entry is not None:
@@ -79,7 +93,7 @@ def execute_query(query_terms, query_vector, dictionary, postings_file):
             current_doc_freq_dict[term] = entry.val()[1]
 
         doc_vector = \
-            (logtf(current_doc_freq_dict.get(term, 0)) * idf(term, dictionary)
+            (logtf(current_doc_freq_dict.get(term, 0)) * idfs[term]
                 for term in query_terms)
 
         score = dot_product(unit_vector(doc_vector), query_vector)
@@ -99,7 +113,7 @@ def execute_query(query_terms, query_vector, dictionary, postings_file):
     # by their doc_ids.
     results.sort()
     results.reverse()
-
+    results = [elem[-1] for elem in results]
     return results
 
 
