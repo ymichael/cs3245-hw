@@ -39,36 +39,16 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     query_vector = [logtf(query_tf[term]) for term in query_terms]
                     query_vector = unit_vector(query_vector)
 
-                    # Execute query (calculate and return vectors for all
-                    # documents).
-                    doc_vectors = execute_query(query_terms, dictionary, pfile)
-
-                    result = []
-                    for doc_vector, doc_id in doc_vectors:
-                        score = dot_product(doc_vector, query_vector)
-                        # NOTE(michael): Add -doc_ids here since we want to break
-                        # ties between using the doc_ids and the list is sorted.
-                        entry = (score, -doc_id, doc_id)
-
-                        if len(result) < NUM_RESULTS:
-                            heapq.heappush(result, entry)
-                        elif result[0] < entry:
-                            # Remove the min element and add current entry since
-                            # it is less than the current entry.
-                            heapq.heappushpop(result, entry)
-
-                    # Sort the final list to order by score, idx (Reverse since
-                    # we want to return the largest score first, breaking ties
-                    # by their doc_ids.
-                    result.sort()
-                    result.reverse()
+                    # Execute query
+                    result = execute_query(
+                        query_terms, query_vector, dictionary, pfile)
 
                     # Write doc_ids to output file.
                     doc_ids = [str(elem[-1]) for elem in result]
                     output.write('%s\n' % ' '.join(doc_ids))
 
 
-def execute_query(query_terms, dictionary, postings_file):
+def execute_query(query_terms, query_vector, dictionary, postings_file):
     postings = []
     for term in query_terms:
         term_ptr = dictionary.get_head(term)
@@ -81,7 +61,7 @@ def execute_query(query_terms, dictionary, postings_file):
     # doc_ids. (See postings_file.py)
     heapq.heapify(postings)
 
-    doc_vectors = []
+    results = []
     while postings:
         current_doc_freq_dict = {}
         current_doc_id = postings[0][0].doc_id
@@ -98,24 +78,38 @@ def execute_query(query_terms, dictionary, postings_file):
             # Populate freq dict with entry's term freqency.
             current_doc_freq_dict[term] = entry.val()[1]
 
-        doc_vector = []
-        for term in query_terms:
-            tf = current_doc_freq_dict.get(term, 0)
-            logtfidf = logtf(tf) * idf(term, dictionary)
-            doc_vector.append(logtfidf)
+        doc_vector = \
+            (logtf(current_doc_freq_dict.get(term, 0)) * idf(term, dictionary)
+                for term in query_terms)
 
-        doc_vectors.append((unit_vector(doc_vector), current_doc_id))
+        score = dot_product(unit_vector(doc_vector), query_vector)
+        # NOTE(michael): Add -doc_ids here since we want to break
+        # ties between using the doc_ids and the list is sorted.
+        entry = (score, -current_doc_id, current_doc_id)
 
-    return doc_vectors
+        if len(results) < NUM_RESULTS:
+            heapq.heappush(results, entry)
+        elif results[0] < entry:
+            # Remove the min element and add current entry since
+            # it is less than the current entry.
+            heapq.heappushpop(results, entry)
+
+    # Sort the final list to order by score, idx (Reverse since
+    # we want to return the largest score first, breaking ties
+    # by their doc_ids.
+    results.sort()
+    results.reverse()
+
+    return results
 
 
 def unit_vector(vector):
     length = math.sqrt(sum(x * x for x in vector))
-    return [float(x)/length for x in vector]
+    return (float(x)/length for x in vector)
 
 
 def dot_product(v1, v2):
-    return sum(x1 * x2 for x1, x2 in zip(v1, v2))
+    return sum(v1[idx] * v2[idx] for idx in enumerate(v1))
 
 
 def logtf(term_frequency):
