@@ -58,60 +58,54 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     output.write('%s\n' % ' '.join(doc_ids))
 
 
-
-def dot_product(v1, v2):
-    return sum(x1 * x2 for x1, x2 in zip(v1, v2))
-
-
 def execute_query(query_terms, dictionary, postings_file):
     postings = []
     for term in query_terms:
         term_ptr = dictionary.get_head(term)
-
-        # Ignore terms with idf == 0.
-        if idf(term, dictionary) == 0:
-            continue
-
         entry = postings_file.get_entry(term_ptr)
         if entry is not None:
             postings.append((entry, term))
 
+    # Build heap of postings.
+    # NOTE(michael): Entries are comparable and will be ordered by their
+    # doc_ids. (See postings_file.py)
     heapq.heapify(postings)
 
     doc_vectors = []
     while postings:
-        current_doc_postings = []
-        current_doc_postings.append(pop_and_maybe_replace(postings))
-        current_doc_id = current_doc_postings[0][0].doc_id
-        while postings and postings[0][0].doc_id == current_doc_id:
-            current_doc_postings.append(pop_and_maybe_replace(postings))
+        current_doc_freq_dict = {}
+        current_doc_id = postings[0][0].doc_id
 
-        freq_dict = {}
-        for entry, term in current_doc_postings:
-            freq_dict[term] = entry.val()[1]
+        # We accumulate the nodes with the smallest doc_id by popping them off
+        # the heap and replacing them with the next node in the linked list if
+        # possible.
+        while postings and postings[0][0].doc_id == current_doc_id:
+            entry, term = heapq.heappop(postings)
+            next_entry = entry.next()
+            if next_entry:
+                heapq.heappush(postings, (next_entry, term))
+
+            # Populate freq dict with entry's term freqency.
+            current_doc_freq_dict[term] = entry.val()[1]
 
         doc_vector = []
         for term in query_terms:
-            tf = freq_dict.get(term, 0)
-            tfidf = logtf(tf) * idf(term, dictionary)
-            doc_vector.append(tfidf)
+            tf = current_doc_freq_dict.get(term, 0)
+            logtfidf = logtf(tf) * idf(term, dictionary)
+            doc_vector.append(logtfidf)
 
         doc_vectors.append((unit_vector(doc_vector), current_doc_id))
 
     return doc_vectors
 
 
-def pop_and_maybe_replace(heap):
-    entry, term = heapq.heappop(heap)
-    next_entry = entry.next()
-    if next_entry:
-        heapq.heappush(heap, (next_entry, term))
-    return entry, term
-
-
 def unit_vector(vector):
     length = math.sqrt(sum(x * x for x in vector))
     return [float(x)/length for x in vector]
+
+
+def dot_product(v1, v2):
+    return sum(x1 * x2 for x1, x2 in zip(v1, v2))
 
 
 def logtf(term_frequency):
