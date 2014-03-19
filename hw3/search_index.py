@@ -9,6 +9,7 @@ import cache
 
 
 LOG_BASE = 10
+NUM_RESULTS = 10
 
 
 def process_query(query):
@@ -42,16 +43,25 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     # documents).
                     doc_vectors = execute_query(query_terms, dictionary, pfile)
 
-                    # Normalise all document vectors with our query vector.
-                    # NOTE(michael): Negate the score since we'll be using a
-                    # min-heap.
-                    normalized_doc_vectors = \
-                        [(-1 * dot_product(doc_vector, query_vector), doc_id)
-                            for doc_vector, doc_id in doc_vectors]
+                    result = []
+                    for doc_vector, doc_id in doc_vectors:
+                        score = dot_product(doc_vector, query_vector)
+                        # NOTE(michael): Add -doc_ids here since we want to break
+                        # ties between using the doc_ids and the list is sorted.
+                        entry = (score, -doc_id, doc_id)
 
-                    # Create min heap and extract the top 10 results.
-                    heapq.heapify(normalized_doc_vectors)
-                    result = heapq.nsmallest(10, normalized_doc_vectors)
+                        if len(result) < NUM_RESULTS:
+                            heapq.heappush(result, entry)
+                        elif result[0] < entry:
+                            # Remove the min element and add current entry since
+                            # it is less than the current entry.
+                            heapq.heappushpop(result, entry)
+
+                    # Sort the final list to order by score, idx (Reverse since
+                    # we want to return the largest score first, breaking ties
+                    # by their doc_ids.
+                    result.sort()
+                    result.reverse()
 
                     # Write doc_ids to output file.
                     doc_ids = [str(elem[-1]) for elem in result]
