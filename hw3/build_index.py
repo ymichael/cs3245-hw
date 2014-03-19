@@ -5,7 +5,9 @@ from postings_file import PostingsFile, PostingsFileEntryWithFrequencies
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem.porter import PorterStemmer
 
+
 SKIP_POINTER_THRESHOLD = 3
+
 
 def build(training_dir, dict_file, postings_file):
     dictionary = Dictionary()
@@ -29,27 +31,31 @@ def build(training_dir, dict_file, postings_file):
             doc_id = int(os.path.basename(filepath))
             terms = process_file(filepath)
             for term in terms:
-                # Create postings file entry if entry does not exist.
+                # Create postings file entry if entry does not exist for
+                # `(term, doc_id)` pair.
                 if not dictionary.has_entry(term, doc_id):
+                    # Update postings file entry for previous `(term, doc_id)`
+                    # entry for the current term. (To point to the entry we are
+                    # about to add.
+                    # `(term, doc_id)` pair.
                     if dictionary.get_frequency(term) != 0:
-                        # Update previous node in the linked list.
                         previous_node_location = dictionary.get_tail(term)
                         previous_entry = \
                             postings_file.get_entry(previous_node_location)
                         previous_entry.next_pointer = postings_file.pointer
                         postings_file.write_entry(previous_entry)
 
+                    # Add new postings file entry for the `(term, doc_id)` pair.
                     dictionary.add_term(term, doc_id, postings_file.pointer)
                     new_entry = PostingsFileEntryWithFrequencies(doc_id)
                     postings_file.write_entry(new_entry)
 
-                # Update postings file entry term frequency.
+                # Update postings file entry term frequency. (Increment).
                 # NOTE(michael): We can safely use the tail pointer since we
                 # process documents in order and not at random.
                 current_term_location = dictionary.get_tail(term)
                 current_term_entry = \
                     postings_file.get_entry(current_term_location)
-
                 current_term_entry.term_freq += 1
                 postings_file.write_entry(current_term_entry)
 
@@ -74,7 +80,6 @@ def process_line(line):
     return [word_tokenize(sent) for sent in sent_tokenize(line)]
 
 
-stemmer = PorterStemmer()
 def process_tokens(tokens):
     """Returns an list of tokens that are stemmed and lowercased.
 
@@ -86,6 +91,9 @@ def process_tokens(tokens):
             terms.append(process_word(token))
 
     return list(terms)
+
+
+stemmer = PorterStemmer()
 
 
 def process_word(token):

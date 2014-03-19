@@ -7,7 +7,12 @@ import collections
 import operator
 import cache
 
+
 LOG_BASE = 10
+
+
+def process_query(query):
+    return [process_word(token) for token in query.split(' ')]
 
 
 def search(dictionary_file, postings_file, queries_file, output_file):
@@ -29,30 +34,29 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     query_tf = collections.Counter(query_tokens)
                     query_terms = sorted(set(query_tokens))
 
+                    # Calculate query vector
                     query_vector = [logtf(query_tf[term]) for term in query_terms]
                     query_vector = unit_vector(query_vector)
 
-                    # Process all words in the query here.
+                    # Execute query (calculate and return vectors for all
+                    # documents).
                     doc_vectors = execute_query(query_terms, dictionary, pfile)
 
-                    # Dot.product
-                    normalized_doc_vectors = []
-                    for doc_vector, doc_id in doc_vectors:
-                        score = dot_product(doc_vector, query_vector)
-                        normalized_doc_vectors.append((-1 * score, doc_id))
+                    # Normalise all document vectors with our query vector.
+                    # NOTE(michael): Negate the score since we'll be using a
+                    # min-heap.
+                    normalized_doc_vectors = \
+                        [(-1 * dot_product(doc_vector, query_vector), doc_id)
+                            for doc_vector, doc_id in doc_vectors]
 
-                    result = []
+                    # Create min heap and extract the top 10 results.
                     heapq.heapify(normalized_doc_vectors)
-                    while normalized_doc_vectors and len(result) < 10:
-                        result.append(heapq.heappop(normalized_doc_vectors))
+                    result = heapq.nsmallest(10, normalized_doc_vectors)
 
                     # Write doc_ids to output file.
                     doc_ids = [str(elem[-1]) for elem in result]
                     output.write('%s\n' % ' '.join(doc_ids))
 
-
-def process_query(query):
-    return [process_word(token) for token in query.split(' ')]
 
 
 def dot_product(v1, v2):
