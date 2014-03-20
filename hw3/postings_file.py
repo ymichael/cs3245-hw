@@ -39,14 +39,18 @@ class PostingsFileEntry(SkipListNode):
             return None
         if self._postings_file is None:
             raise Exception('Postings File is not set.')
-        return self._postings_file.get_entry(self.next_pointer)
+        # NOTE(michael): Set reset to be false when using the list node
+        # interface to avoid unnecessary seeks.
+        return self._postings_file.get_entry(self.next_pointer, reset=False)
 
     def skip(self):
         if not self.skip_pointer:
             return None
         if self._postings_file is None:
             raise Exception('Postings File is not set.')
-        return self._postings_file.get_entry(self.skip_pointer)
+        # NOTE(michael): Set reset to be false when using the list node
+        # interface to avoid unnecessary seeks.
+        return self._postings_file.get_entry(self.skip_pointer, reset=False)
 
     def to_string(self):
         return self.FORMAT % (
@@ -171,7 +175,7 @@ class PostingsFile(object):
             return
         self.f.seek(byte_no)
 
-    def read_entry(self, byte_no):
+    def read_entry(self, byte_no, reset=True):
         """Reads line at byte_no.
 
         Returns pointer to the old postion after seeking and reading the
@@ -180,23 +184,25 @@ class PostingsFile(object):
         if byte_no is None:
             return None
 
-        # Keep old pointer.
-        old_pointer = self.pointer
+        if reset:
+            # Keep old pointer.
+            old_pointer = self.pointer
 
         self.seek(byte_no)
         retval = self.f.read(self.entry_cls.SIZE)
 
-        # Reset pointer after reading entry.
-        self.seek(old_pointer)
+        if reset:
+            # Reset pointer after reading entry.
+            self.seek(old_pointer)
 
         return retval
 
-    def get_entry(self, byte_no):
+    def get_entry(self, byte_no, reset=True):
         if byte_no is None:
             return None
 
         entry = self.entry_cls.from_string(
-            self.read_entry(byte_no))
+            self.read_entry(byte_no, reset))
 
         entry.own_pointer = byte_no
         entry.set_postings_file(self)
@@ -206,7 +212,7 @@ class PostingsFile(object):
         if head is None:
             return []
 
-        current_node = self.get_entry(head)
+        current_node = self.get_entry(head, reset=False)
         entries = []
         while (current_node):
             entries.append(current_node)

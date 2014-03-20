@@ -55,9 +55,9 @@ def execute_query(query_terms, query_vector, dictionary, postings_file):
     for term in query_terms:
         idfs[term] = idf(term, dictionary)
         term_ptr = dictionary.get_head(term)
-        entry = postings_file.get_entry(term_ptr)
+        entry = postings_file.get_entry(term_ptr, reset=False)
         if entry is not None:
-            postings.append((entry, term))
+            postings.append((entry.doc_id, term, entry))
 
     # Build heap of postings.
     # NOTE(michael): Entries are comparable and will be ordered by their
@@ -67,16 +67,16 @@ def execute_query(query_terms, query_vector, dictionary, postings_file):
     results = []
     while postings:
         current_doc_freq_dict = {}
-        current_doc_id = postings[0][0].doc_id
+        current_doc_id = postings[0][0]
 
         # We accumulate the nodes with the smallest doc_id by popping them off
         # the heap and replacing them with the next node in the linked list if
         # possible.
-        while postings and postings[0][0].doc_id == current_doc_id:
-            entry, term = heapq.heappop(postings)
+        while postings and postings[0][0] == current_doc_id:
+            doc_id, term, entry = heapq.heappop(postings)
             next_entry = entry.next()
             if next_entry:
-                heapq.heappush(postings, (next_entry, term))
+                heapq.heappush(postings, (next_entry.doc_id, term, next_entry))
 
             # Populate freq dict with entry's term freqency.
             current_doc_freq_dict[term] = entry.val()[1]

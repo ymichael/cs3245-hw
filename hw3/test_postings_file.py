@@ -161,6 +161,32 @@ def test_postings_file_get_entry_from_pointer():
     os.remove(filename)
 
 
+def test_postings_file_get_entry_reset_false():
+    filename = 'test'
+    with PostingsFile(filename, 'w+') as pfile:
+        head = pfile.pointer
+        prev_ptr = head
+
+        last = 12
+        for i in xrange(1, last):
+            current_entry = PostingsFileEntry(i)
+            current_entry.own_pointer = pfile.pointer
+            pfile.write_entry(current_entry)
+
+            if i != last - 1:
+                current_entry.next_pointer = pfile.pointer
+                pfile.write_entry(current_entry)
+
+        entries = []
+        entry = pfile.get_entry(head, reset=False)
+        while entry:
+            entries.append(entry)
+            entry = entry.next()
+        entries = [entry.doc_id for entry in entries]
+        assert_eq([1,2,3,4,5,6,7,8,9,10,11], entries)
+
+    os.remove(filename)
+
 
 def test_postings_file_entry_to_string_only_doc_id():
     pfe = PostingsFileEntry(1)
