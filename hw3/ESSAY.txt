@@ -13,6 +13,31 @@ small bonus to submissions that achieve this functionality correctly).
 
 - Supporting phrasal queries with the VSM model
 
+I don't think the ideas for phrasal queries for the boolean query model are
+disjoint from the VSM model. In fact, they seem to map pretty well.
+
+Naively, one way to support phrasal queries with the VSM model is to while
+merging postings lists (to calculate document vectors):
+
+    1. Only consider the document vector is it contains both terms in the
+    phrase.
+    2. Filter all resulting documents for the actual phrase.
+
+Similar to the boolean query model We can do better by using biward indexes.
+Indexing biwords in a seperate index and then using that for phrasal queries.
+The trade off here is the space required as well as the need for additional
+processing (expensive) for phrases longer than 2 words.
+
+Finally the most common approach to phrasal queries (in the boolean model) is
+using positional indexes. For the VSM model, this similar approach can be
+applied:
+
+    1. Store postings of the form: docID: term_freq < position1, position2...>
+
+    2. In the merge operation, we check that both terms are in a document and
+    their positions of appearance in the document are compatible with the
+    pharase query being evaluated.
+
 
 2. Describe how your search engine reacts to long documents and long queries as
 compared to short documents and queries. Is the normalization you use sufficient
@@ -20,12 +45,54 @@ to address the problems (see Section 6.4.4 for a hint)? In your judgement, is
 the lnc.ltc scheme (n.b., not the ranking scheme you were asked to implement)
 sufficient for retrieving documents from the Reuters-21578 collection?
 
-- Reaction to long documens and long queries compared to short documents and
-  queries
+- Reaction to long documents and queries compared to short documents and queries
+
+Longer documents and queries are slower than short documents and queries.
+
+In addition, I'd expect the precision and recall of short documents and queries
+to be better than long documents and queries. This is related to the second part
+of this question where we see that normalization techniques becomes more
+important as the document lengths increase. As such, since we use fairly simple
+euclidean normalization for our search engine, I'd expect it to behavior better
+for shorter documents since the "room for error" is minimised.
 
 - Is the normalization sufficient?
 
+According to 6.4.4:
+
+    (In this assignment) we normalized each document vector by the euclidean
+    length of the vector, so that all document vectors turned into unit vectors.
+    In doing so, we eliminated all information on the length of the original
+    document; this masks some subtleties about longer documents:
+
+        - Longer documents contain more terms (have higher tf values)
+        - longer documents contain more distinct terms
+
+    These factors can conspire to raise the scores of longer documents, which is
+    unnatural. Longer documents can broadly be lumped into two categeories:
+
+        - verbose documents that essentially repeat the same content
+        - documents covering multiple different topics
+
+    Instead of normalizing based on document length, the score is skewed to
+    account for the effect of document length on relevance.
+
+    (...) This form of compensation for document length is known as pivoted
+    document length normalisation.
+
+I'd say it depends. The normalization doesnt really take into account relevance
+of the document. But its tough to say if this is sufficient, it all boils down
+to our sensitivity to precision and recall. If we were extremely concerned with
+getting relevant documents, we would want to implement something similar to the
+augmented normalization technique mentioned in the textbook.
+
 - Is the lnc.ltc scheme sufficient?
+
+I'd say yes. Without knowing what the search engine is going to be used for, it
+depends. Compared to the scheme we implemented (itc.inc), its the same once we
+account for the cosine normalization for documents.
+
+    (idf.x, idf.y)(q1, q2) = idf.x.q1 + idf.y.q2 = (x, y)(idf.q1, idf.q2)
 
 3. Do you think zone or field parametric indices would be useful for practical
 search in the Reuters collection?
@@ -36,5 +103,17 @@ applied (some documents have it, some don't). Hint: for the next Homework #4, we
 will be using field metadata, so if you want to base Homework #4 on your
 Homework #3, you're welcomed to start support of this early (although no extra
 credit will be given if it's right).
+
+Definitely. Especially when we want to search specifically for a particular
+piece of metadata:
+
+    For eg.
+    - Title contains <...>
+    - Date of publication
+
+As is, the query and results are pretty primitive and not particularly useful
+(probably need to comb through a large number of documents to find a relevant
+document).
+
 
 
