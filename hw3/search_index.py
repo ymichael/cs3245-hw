@@ -1,14 +1,14 @@
-from build_index import process_word
-from dictionary import Dictionary
-from postings_file import PostingsFile, PostingsFileEntryWithFrequencies
 import math
 import heapq
 import collections
 import operator
-import cache
+
+from build_index import process_word
+from dictionary import Dictionary
+from postings_file import *
+from search_utils import *
 
 
-LOG_BASE = 10
 NUM_RESULTS = 10
 
 
@@ -38,7 +38,7 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     # Calculate query vector
                     query_vector = \
                         [logtf(query_tf[term]) for term in query_terms]
-                    query_vector = unit_vector(query_vector)
+                    query_vector = list(unit_vector(query_vector))
 
                     # Execute query
                     results = execute_query(
@@ -47,17 +47,6 @@ def search(dictionary_file, postings_file, queries_file, output_file):
                     # Write doc_ids to output file.
                     results = [str(x) for x in results]
                     output.write('%s\n' % ' '.join(results))
-
-
-def trivial_query(query_term, dictionary, postings_file):
-    term_ptr = dictionary.get_head(query_term)
-    entry = postings_file.get_entry(term_ptr)
-    results = []
-    while len(results) < NUM_RESULTS and entry:
-        doc_id = entry.val()[0]
-        entry = entry.next()
-        results.append(doc_id)
-    return results
 
 
 def execute_query(query_terms, query_vector, dictionary, postings_file):
@@ -93,20 +82,20 @@ def execute_query(query_terms, query_vector, dictionary, postings_file):
             current_doc_freq_dict[term] = entry.val()[1]
 
         doc_vector = \
-            (logtf(current_doc_freq_dict.get(term, 0)) * idfs[term]
-                for term in query_terms)
+            [logtf(current_doc_freq_dict.get(term, 0)) * idfs[term]
+                for term in query_terms]
 
-        score = dot_product(unit_vector(doc_vector), query_vector)
+        score = dot_product(query_vector, unit_vector(doc_vector))
         # NOTE(michael): Add -doc_ids here since we want to break
         # ties between using the doc_ids and the list is sorted.
-        entry = (score, -current_doc_id, current_doc_id)
+        score_entry = (score, -current_doc_id, current_doc_id)
 
         if len(results) < NUM_RESULTS:
-            heapq.heappush(results, entry)
-        elif results[0] < entry:
+            heapq.heappush(results, score_entry)
+        elif results[0] < score_entry:
             # Remove the min element and add current entry since
             # it is less than the current entry.
-            heapq.heappushpop(results, entry)
+            heapq.heappushpop(results, score_entry)
 
     # Sort the final list to order by score, idx (Reverse since
     # we want to return the largest score first, breaking ties
@@ -115,29 +104,3 @@ def execute_query(query_terms, query_vector, dictionary, postings_file):
     results.reverse()
     results = [elem[-1] for elem in results]
     return results
-
-
-def unit_vector(vector):
-    length = math.sqrt(sum(x * x for x in vector))
-    return (float(x)/length for x in vector)
-
-
-def dot_product(v1, v2):
-    return sum(v1[idx] * v2[idx] for idx in enumerate(v1))
-
-
-def logtf(term_frequency):
-    if term_frequency == 0:
-        return 0
-    return 1 + math.log(term_frequency, LOG_BASE)
-
-
-@cache.cached_function(cache_key_func=cache.single_arg_cache_key)
-def idf(term, dictionary):
-    # df is the document frequency of t
-    # (the number of documents that contain t).
-    df = dictionary.get_frequency(term)
-    n = dictionary.number_of_docs()
-    if df == 0:
-        return 0
-    return math.log(float(n)/df, LOG_BASE)
