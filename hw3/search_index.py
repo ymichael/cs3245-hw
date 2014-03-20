@@ -9,6 +9,27 @@ from postings_file import *
 from search_utils import *
 
 
+__doc__ = """Performs search queries using the VSM model.
+
+The code here makes heavy use of: Python's `heapq` module. The main idea
+here was that I wanted to keep as little things in memory as possible.
+
+At a high-level: I did this by maintaining two heaps:
+
+    1. heap of posting list nodes
+    There will be one for each unique query term. Using a heap to do the
+    postings merge help cap the memory footprint here to O(query_terms)
+
+    2. heap of documents and their scores.
+    This heap is capped at a size of NUM_RESULTS, 10. Once I calculated
+    the scores for the document, the document is added to this heap iff
+
+        1. less than 10 results at the moment
+        2. its score is better than the min score (O(1) check because we are
+        using a min-heap)
+"""
+
+
 NUM_RESULTS = 10
 
 
