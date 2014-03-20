@@ -9,6 +9,15 @@ class PostingsFileEntry(SkipListNode):
     FORMAT = "%010d %010d %010d %010d\n"
     SIZE = (10 * 4) + 4
 
+    __slots__ = [
+        'doc_id',
+        'next_pointer',
+        'skip_pointer',
+        'skip_doc_id',
+        'own_pointer',
+        '_postings_file',
+    ]
+
     def __init__(
             self,
             doc_id,
@@ -99,6 +108,16 @@ class PostingsFileEntryWithFrequencies(PostingsFileEntry):
     """Postings File Entry with additional Term Frequencies."""
     FORMAT = "%010d %010d %010d %010d %010d\n"
     SIZE = (10 * 5) + 5
+
+    __slots__ = [
+        'doc_id',
+        'next_pointer',
+        'skip_pointer',
+        'skip_doc_id',
+        'own_pointer',
+        '_postings_file',
+        'term_freq',
+    ]
 
     def __init__(
             self,

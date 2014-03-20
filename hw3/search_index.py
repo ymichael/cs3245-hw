@@ -100,7 +100,6 @@ def execute_query(query_terms, query_vector, dictionary, postings_file):
     # Sort the final list to order by score, idx (Reverse since
     # we want to return the largest score first, breaking ties
     # by their doc_ids.
-    results.sort()
-    results.reverse()
+    results.sort(reverse=True)
     results = [elem[-1] for elem in results]
     return results
